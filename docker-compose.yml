@@ -1,0 +1,22 @@
+# Local development database only. The frontend and backend run natively
+# (`npm run dev` and `./mvnw spring-boot:run`), so they are not defined here.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: weekly-report-generator-db
+    environment:
+      POSTGRES_DB: weekly_report
+      POSTGRES_USER: weekly_report
+      POSTGRES_PASSWORD: weekly_report
+    ports:
+      - "5432:5432"
+    volumes:
+      - weekly-report-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U weekly_report -d weekly_report"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  weekly-report-db-data:
