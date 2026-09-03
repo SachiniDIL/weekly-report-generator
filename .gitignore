@@ -16,6 +16,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# Husky's generated hook wrapper (created when the hooks are activated)
+.husky/_/
+
 # Environment files (anywhere in the repo)
 .env
 .env.*

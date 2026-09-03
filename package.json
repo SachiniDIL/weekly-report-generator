@@ -1,4 +1,16 @@
 {
   "name": "weekly-report-generator",
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.4"
+  },
+  "lint-staged": {
+    "frontend/**/*.{ts,tsx}": [
+      "npm --prefix frontend --silent run lint:fix --",
+      "npm --prefix frontend --silent run format --"
+    ],
+    "!(package-lock).json": "npm --prefix frontend --silent run format --",
+    "*.md": "npm --prefix frontend --silent run format --"
+  }
 }

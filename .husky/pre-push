@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+set -e
+
+# Full type-check and unit tests for the frontend on every push.
+npm --prefix frontend run typecheck
+npm --prefix frontend test
+
+# Compile the backend only when this push includes changes under backend/.
+upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)
+if [ -n "$upstream" ]; then
+  backend_changes=$(git diff --name-only "$upstream"...HEAD -- backend/)
+else
+  backend_changes="backend/"
+fi
+
+if [ -n "$backend_changes" ]; then
+  (cd backend && ./mvnw -q compile)
+fi
