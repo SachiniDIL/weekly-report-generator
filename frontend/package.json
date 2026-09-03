@@ -16,7 +16,11 @@
   "dependencies": {
     "next": "15.5.25",
     "react": "19.2.8",
+<<<<<<< HEAD
     "react-dom": "19.2.8"
+=======
+    "react-dom": "19.1.0"
+>>>>>>> 82e3c3742d21951de167b533937ad85ad39d585b
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -28,7 +32,7 @@
     "@types/node": "^26",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
+    "eslint": "^10",
     "eslint-config-next": "15.5.25",
     "jest": "^30.5.1",
     "jest-environment-jsdom": "^30.5.1",
