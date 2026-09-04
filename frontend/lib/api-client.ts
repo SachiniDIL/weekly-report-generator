@@ -48,6 +48,11 @@ export class ApiError extends Error {
   }
 }
 
+/** The message to show a user: the backend's own text for an ApiError, generic for anything else. */
+export function describeError(error: unknown): string {
+  return error instanceof ApiError ? error.message : "Something went wrong — please try again.";
+}
+
 // The token lives in the auth context; it is pushed here so this client stays unaware of
 // how or where the session is persisted.
 let authToken: string | null = null;
