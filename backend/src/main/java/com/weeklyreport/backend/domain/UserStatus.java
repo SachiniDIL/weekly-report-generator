@@ -2,5 +2,6 @@ package com.weeklyreport.backend.domain;
 
 public enum UserStatus {
     PENDING,
-    ACTIVE
+    ACTIVE,
+    REMOVED
 }

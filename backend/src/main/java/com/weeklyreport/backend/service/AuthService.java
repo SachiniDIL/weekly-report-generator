@@ -7,11 +7,9 @@ import com.weeklyreport.backend.dto.LoginResponse;
 import com.weeklyreport.backend.dto.RegisterRequest;
 import com.weeklyreport.backend.dto.RegisterResponse;
 import com.weeklyreport.backend.exception.AccountPendingApprovalException;
-import com.weeklyreport.backend.exception.EmailAlreadyUsedException;
 import com.weeklyreport.backend.exception.InvalidCredentialsException;
 import com.weeklyreport.backend.repository.UserRepository;
 import com.weeklyreport.backend.security.JwtService;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,12 +21,17 @@ public class AuthService {
     private static final String REGISTRATION_MESSAGE =
             "Registration submitted — your account is pending admin approval";
 
+    private final UserRegistrar userRegistrar;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
     public AuthService(
-            UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+            UserRegistrar userRegistrar,
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService) {
+        this.userRegistrar = userRegistrar;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -36,21 +39,7 @@ public class AuthService {
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
-        if (userRepository.findByEmail(request.email()).isPresent()) {
-            throw new EmailAlreadyUsedException();
-        }
-
-        User user = new User();
-        user.setName(request.name());
-        user.setEmail(request.email());
-        user.setPasswordHash(passwordEncoder.encode(request.password()));
-
-        try {
-            userRepository.saveAndFlush(user);
-        } catch (DataIntegrityViolationException raceWithConcurrentRegistration) {
-            throw new EmailAlreadyUsedException();
-        }
-
+        userRegistrar.create(request.name(), request.email(), request.password(), UserStatus.PENDING, null);
         return new RegisterResponse(REGISTRATION_MESSAGE);
     }
 
@@ -63,6 +52,10 @@ public class AuthService {
 
         if (user.getStatus() == UserStatus.PENDING) {
             throw new AccountPendingApprovalException();
+        }
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            // A removed account behaves exactly like one that never existed.
+            throw new InvalidCredentialsException();
         }
 
         String token = jwtService.generateToken(user);
