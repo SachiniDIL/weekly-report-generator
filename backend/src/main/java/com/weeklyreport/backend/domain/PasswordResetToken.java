@@ -12,7 +12,6 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "password_reset_tokens")
@@ -38,7 +37,8 @@ public class PasswordResetToken {
     @Column(name = "used_at")
     private Instant usedAt;
 
-    @CreationTimestamp
+    // Set explicitly by PasswordResetService from the injected Clock so the resend
+    // rate-limit window is deterministic and testable.
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 }
