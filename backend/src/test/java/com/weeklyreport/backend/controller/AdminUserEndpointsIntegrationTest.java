@@ -1,6 +1,8 @@
 package com.weeklyreport.backend.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -94,6 +96,13 @@ class AdminUserEndpointsIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    @ParameterizedTest(name = "an unauthenticated request is rejected from {0}")
+    @MethodSource("adminEndpoints")
+    void unauthenticatedRequestsAreRejectedFromEveryAdminEndpoint(
+            MockHttpServletRequestBuilder request) throws Exception {
+        mockMvc.perform(request).andExpect(status().is(anyOf(is(401), is(403))));
+    }
+
     @Test
     void adminCreatesAnImmediatelyActiveUserWithTheGivenRole() throws Exception {
         User admin = persistUser("Admin", "admin@example.com", UserStatus.ACTIVE, Role.ADMIN);
@@ -174,6 +183,49 @@ class AdminUserEndpointsIntegrationTest {
         assertThat(userRepository.findById(pending.getId())).isEmpty();
     }
 
+    @Test
+    void aRejectedPendingUsersEmailCanBeRegisteredAgain() throws Exception {
+        User admin = persistUser("Admin", "admin@example.com", UserStatus.ACTIVE, Role.ADMIN);
+        User pending = persistUser("Rejected Signup", "reuse@example.com", UserStatus.PENDING, null);
+
+        mockMvc.perform(delete("/admin/users/" + pending.getId()).header("Authorization", bearer(admin)))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(publicRegisterBody("Fresh Signup", "reuse@example.com", "password12")))
+                .andExpect(status().isCreated());
+
+        User reRegistered = userRepository.findByEmail("reuse@example.com").orElseThrow();
+        assertThat(reRegistered.getId()).isNotEqualTo(pending.getId());
+        assertThat(reRegistered.getStatus()).isEqualTo(UserStatus.PENDING);
+    }
+
+    @Test
+    void aSoftDeletedActiveUsersEmailStaysBlockedFromReRegistration() throws Exception {
+        User admin = persistUser("Admin", "admin@example.com", UserStatus.ACTIVE, Role.ADMIN);
+        User active = persistUser("Departed", "kept@example.com", UserStatus.ACTIVE, Role.MEMBER);
+
+        mockMvc.perform(delete("/admin/users/" + active.getId()).header("Authorization", bearer(admin)))
+                .andExpect(status().isNoContent());
+        assertThat(userRepository.findByEmail("kept@example.com").orElseThrow().getStatus())
+                .isEqualTo(UserStatus.REMOVED);
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(publicRegisterBody("Impostor", "kept@example.com", "password12")))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void operatingOnAnUnknownUserIdReturnsACleanNotFound() throws Exception {
+        User admin = persistUser("Admin", "admin@example.com", UserStatus.ACTIVE, Role.ADMIN);
+
+        mockMvc.perform(delete("/admin/users/999999").header("Authorization", bearer(admin)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").isNotEmpty());
+    }
+
     private User persistUser(String name, String email, UserStatus status, Role role) {
         User user = new User();
         user.setName(name);
@@ -204,6 +256,12 @@ class AdminUserEndpointsIntegrationTest {
         return """
                 {"name": "%s", "email": "%s", "password": "%s", "role": "%s"}
                 """.formatted(name, email, password, role);
+    }
+
+    private static String publicRegisterBody(String name, String email, String password) {
+        return """
+                {"name": "%s", "email": "%s", "password": "%s"}
+                """.formatted(name, email, password);
     }
 
     @RestController

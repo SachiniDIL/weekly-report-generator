@@ -64,6 +64,21 @@ class AuthEndpointsIntegrationTest {
     }
 
     @Test
+    void registrationIgnoresARoleFieldSmuggledIntoThePayload() throws Exception {
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "Mallory", "email": "mallory@example.com", \
+                                "password": "password1", "role": "ADMIN"}
+                                """))
+                .andExpect(status().isCreated());
+
+        User saved = userRepository.findByEmail("mallory@example.com").orElseThrow();
+        assertThat(saved.getRole()).isNull();
+        assertThat(saved.getStatus()).isEqualTo(UserStatus.PENDING);
+    }
+
+    @Test
     void registrationWithADuplicateEmailIsRejected() throws Exception {
         persistUser("taken@example.com", UserStatus.PENDING, null);
 
