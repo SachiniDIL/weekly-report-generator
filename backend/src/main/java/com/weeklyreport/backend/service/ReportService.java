@@ -3,20 +3,23 @@ package com.weeklyreport.backend.service;
 import com.weeklyreport.backend.domain.Achievement;
 import com.weeklyreport.backend.domain.Blocker;
 import com.weeklyreport.backend.domain.HoursBreakdown;
+import com.weeklyreport.backend.domain.Project;
 import com.weeklyreport.backend.domain.Report;
 import com.weeklyreport.backend.domain.ReportStatus;
 import com.weeklyreport.backend.domain.ReportVersion;
 import com.weeklyreport.backend.domain.TaskEntry;
+import com.weeklyreport.backend.domain.User;
 import com.weeklyreport.backend.dto.CreateReportRequest;
 import com.weeklyreport.backend.dto.ReportContentRequest;
-import com.weeklyreport.backend.dto.ReportContentResponse;
 import com.weeklyreport.backend.dto.ReportResponse;
 import com.weeklyreport.backend.exception.DuplicateKeyContentItemException;
 import com.weeklyreport.backend.exception.InvalidReportStateException;
+import com.weeklyreport.backend.exception.ProjectNotFoundException;
 import com.weeklyreport.backend.exception.ReportNotFoundException;
 import com.weeklyreport.backend.repository.AchievementRepository;
 import com.weeklyreport.backend.repository.BlockerRepository;
 import com.weeklyreport.backend.repository.HoursBreakdownRepository;
+import com.weeklyreport.backend.repository.ProjectRepository;
 import com.weeklyreport.backend.repository.ReportRepository;
 import com.weeklyreport.backend.repository.ReportVersionRepository;
 import com.weeklyreport.backend.repository.TaskEntryRepository;
@@ -38,34 +41,44 @@ public class ReportService {
 
     private final ReportRepository reportRepository;
     private final ReportVersionRepository reportVersionRepository;
+    private final ProjectRepository projectRepository;
     private final TaskEntryRepository taskEntryRepository;
     private final BlockerRepository blockerRepository;
     private final AchievementRepository achievementRepository;
     private final HoursBreakdownRepository hoursBreakdownRepository;
+    private final ReportContentLoader contentLoader;
     private final Clock clock;
 
     public ReportService(
             ReportRepository reportRepository,
             ReportVersionRepository reportVersionRepository,
+            ProjectRepository projectRepository,
             TaskEntryRepository taskEntryRepository,
             BlockerRepository blockerRepository,
             AchievementRepository achievementRepository,
             HoursBreakdownRepository hoursBreakdownRepository,
+            ReportContentLoader contentLoader,
             Clock clock) {
         this.reportRepository = reportRepository;
         this.reportVersionRepository = reportVersionRepository;
+        this.projectRepository = projectRepository;
         this.taskEntryRepository = taskEntryRepository;
         this.blockerRepository = blockerRepository;
         this.achievementRepository = achievementRepository;
         this.hoursBreakdownRepository = hoursBreakdownRepository;
+        this.contentLoader = contentLoader;
         this.clock = clock;
     }
 
     @Transactional
-    public ReportResponse createReport(long userId, CreateReportRequest request, ReportContentRequest content) {
+    public ReportResponse createReport(User owner, CreateReportRequest request, ReportContentRequest content) {
+        Project project = projectRepository
+                .findById(request.projectId())
+                .orElseThrow(() -> new ProjectNotFoundException(request.projectId()));
+
         Report report = new Report();
-        report.setUserId(userId);
-        report.setProjectId(request.projectId());
+        report.setUser(owner);
+        report.setProject(project);
         report.setWeekStart(request.weekStart());
         report.setWeekEnd(request.weekEnd());
         report.setCurrentVersionNo(1);
@@ -81,8 +94,8 @@ public class ReportService {
     }
 
     @Transactional
-    public ReportResponse updateReportContent(long reportId, long userId, ReportContentRequest content) {
-        Report report = getOwnedReport(reportId, userId);
+    public ReportResponse updateReportContent(long reportId, User caller, ReportContentRequest content) {
+        Report report = getOwnedReport(reportId, caller);
         if (report.getStatus() != ReportStatus.DRAFT) {
             throw new InvalidReportStateException("Report " + reportId + " is not in an editable state");
         }
@@ -93,8 +106,8 @@ public class ReportService {
     }
 
     @Transactional
-    public ReportResponse submitReport(long reportId, long userId) {
-        Report report = getOwnedReport(reportId, userId);
+    public ReportResponse submitReport(long reportId, User caller) {
+        Report report = getOwnedReport(reportId, caller);
         if (report.getStatus() != ReportStatus.DRAFT) {
             throw new InvalidReportStateException("Report " + reportId + " is not in a submittable state");
         }
@@ -143,18 +156,12 @@ public class ReportService {
     }
 
     private ReportResponse toResponse(Report report, ReportVersion version) {
-        ReportContentResponse content = ReportContentResponse.from(
-                version,
-                taskEntryRepository.findByReportVersionId(version.getId()),
-                blockerRepository.findByReportVersionId(version.getId()),
-                achievementRepository.findByReportVersionId(version.getId()),
-                hoursBreakdownRepository.findByReportVersionId(version.getId()));
-        return ReportResponse.from(report, content);
+        return ReportResponse.from(report, contentLoader.load(version));
     }
 
-    private Report getOwnedReport(long reportId, long userId) {
+    private Report getOwnedReport(long reportId, User caller) {
         Report report = getReport(reportId);
-        if (!report.getUserId().equals(userId)) {
+        if (!report.getUser().getId().equals(caller.getId())) {
             throw new AccessDeniedException("You do not own this report");
         }
         return report;

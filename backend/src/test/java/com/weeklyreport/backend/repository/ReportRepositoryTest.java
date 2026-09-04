@@ -78,7 +78,7 @@ class ReportRepositoryTest {
 
     @Test
     void savesAndReloadsAFullReportVersionChain() {
-        Report report = saveReport(saveUser().getId(), saveProject().getId());
+        Report report = saveReport(saveUser(), saveProject());
 
         ReportVersion version = new ReportVersion();
         version.setReport(report);
@@ -156,7 +156,7 @@ class ReportRepositoryTest {
 
     @Test
     void persistsAndReloadsTheNativeReportStatusEnum() {
-        Report report = saveReport(saveUser().getId(), saveProject().getId());
+        Report report = saveReport(saveUser(), saveProject());
         report.setStatus(ReportStatus.NEEDS_CORRECTION);
         Long reportId = reportRepository.save(report).getId();
 
@@ -166,7 +166,7 @@ class ReportRepositoryTest {
 
     @Test
     void defaultsReportStatusToDraftAndCurrentVersionNoToZero() {
-        Report report = saveReport(saveUser().getId(), saveProject().getId());
+        Report report = saveReport(saveUser(), saveProject());
 
         Report reloaded = reportRepository.findById(report.getId()).orElseThrow();
         assertThat(reloaded.getStatus()).isEqualTo(ReportStatus.DRAFT);
@@ -193,7 +193,7 @@ class ReportRepositoryTest {
     }
 
     private ReportVersion saveReportVersion() {
-        Report report = saveReport(saveUser().getId(), saveProject().getId());
+        Report report = saveReport(saveUser(), saveProject());
         ReportVersion version = new ReportVersion();
         version.setReport(report);
         version.setVersionNo(1);
@@ -216,10 +216,10 @@ class ReportRepositoryTest {
         return achievement;
     }
 
-    private Report saveReport(Long userId, Long projectId) {
+    private Report saveReport(User user, Project project) {
         Report report = new Report();
-        report.setUserId(userId);
-        report.setProjectId(projectId);
+        report.setUser(user);
+        report.setProject(project);
         report.setWeekStart(LocalDate.of(2026, 9, 1));
         report.setWeekEnd(LocalDate.of(2026, 9, 5));
         return reportRepository.save(report);
