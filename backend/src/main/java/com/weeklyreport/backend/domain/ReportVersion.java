@@ -14,7 +14,11 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
-/** An immutable snapshot of a {@link Report}'s content as of one submission. */
+/**
+ * One version of a {@link Report}'s content. Mutable — its content rows get replaced wholesale
+ * on each edit — for as long as the parent report's status is DRAFT/NEEDS_CORRECTION; submitting
+ * stamps {@code submittedAt} and the version is thereafter treated as fixed history.
+ */
 @Entity
 @Table(name = "report_versions")
 @Getter
@@ -35,8 +39,11 @@ public class ReportVersion {
     @Column(name = "version_no", nullable = false)
     private int versionNo;
 
+    // Defaults to its creation time (also covering the NOT NULL column while the version is
+    // still a draft) and is overwritten with the real submission time by ReportService — hence
+    // no updatable = false, unlike Report.createdAt.
     @CreationTimestamp
-    @Column(name = "submitted_at", nullable = false, updatable = false)
+    @Column(name = "submitted_at", nullable = false)
     private Instant submittedAt;
 
     @Column(name = "tasks_planned_next")
