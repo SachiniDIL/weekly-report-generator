@@ -1,8 +1,9 @@
 import type { AuthUser } from "./api-client";
 import { evaluateAuthGuard } from "./auth-guard";
 
-const MANAGER: AuthUser = { id: 1, name: "Ada", role: "MANAGER" };
-const ADMIN: AuthUser = { id: 2, name: "Grace", role: "ADMIN" };
+const MEMBER: AuthUser = { id: 1, name: "Lin", role: "MEMBER" };
+const MANAGER: AuthUser = { id: 2, name: "Ada", role: "MANAGER" };
+const ADMIN: AuthUser = { id: 3, name: "Grace", role: "ADMIN" };
 
 describe("evaluateAuthGuard", () => {
   it("holds off while the session is still loading, without redirecting", () => {
@@ -46,9 +47,27 @@ describe("evaluateAuthGuard", () => {
     ).toEqual({ redirectTo: null, isChecking: false });
   });
 
-  it("redirects to the fallback route when the user's role is not allowed", () => {
+  it("sends a MEMBER who hits a manager-only route to the member landing route", () => {
     expect(
-      evaluateAuthGuard({ isLoading: false, user: MANAGER, token: "jwt" }, ["ADMIN"]),
-    ).toEqual({ redirectTo: "/dashboard", isChecking: true });
+      evaluateAuthGuard({ isLoading: false, user: MEMBER, token: "jwt" }, ["MANAGER"]),
+    ).toEqual({ redirectTo: "/reports", isChecking: true });
+  });
+
+  it("sends a MANAGER who hits a member-only route to the manager landing route", () => {
+    expect(
+      evaluateAuthGuard({ isLoading: false, user: MANAGER, token: "jwt" }, ["MEMBER"]),
+    ).toEqual({ redirectTo: "/projects", isChecking: true });
+  });
+
+  it("lets a MEMBER through a member-only route", () => {
+    expect(
+      evaluateAuthGuard({ isLoading: false, user: MEMBER, token: "jwt" }, ["MEMBER"]),
+    ).toEqual({ redirectTo: null, isChecking: false });
+  });
+
+  it("lets either role through a route both can see", () => {
+    expect(
+      evaluateAuthGuard({ isLoading: false, user: MANAGER, token: "jwt" }, ["MEMBER", "MANAGER"]),
+    ).toEqual({ redirectTo: null, isChecking: false });
   });
 });

@@ -21,7 +21,8 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   /** True until the on-mount sessionStorage rehydration has finished. */
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  /** Resolves with the authenticated user so callers can route by role. */
+  login: (email: string, password: string) => Promise<AuthUser>;
   logout: () => void;
 }
 
@@ -44,13 +45,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string): Promise<AuthUser> => {
     const { token: newToken, user: newUser } = await loginRequest({ email, password });
     setToken(newToken);
     setUser(newUser);
     setAuthToken(newToken);
     writeItem(TOKEN_STORAGE_KEY, newToken);
     writeItem(USER_STORAGE_KEY, JSON.stringify(newUser));
+    return newUser;
   }, []);
 
   const logout = useCallback(() => {

@@ -77,18 +77,23 @@ export function resetPassword(payload: ResetPasswordPayload): Promise<MessageRes
   return request("/auth/reset-password", { method: "POST", body: payload });
 }
 
-interface RequestOptions {
+export type QueryValue = string | number | boolean | undefined;
+
+export interface RequestOptions {
   method: string;
   body?: unknown;
+  /** Serialized onto the URL; keys with an `undefined` value are dropped. */
+  query?: Record<string, QueryValue>;
 }
 
-async function request<T>(path: string, options: RequestOptions): Promise<T> {
+/** The shared HTTP primitive every endpoint module builds on. */
+export async function request<T>(path: string, options: RequestOptions): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (authToken) {
     headers.Authorization = `Bearer ${authToken}`;
   }
 
-  const response = await fetch(`${apiBaseUrl()}${path}`, {
+  const response = await fetch(`${apiBaseUrl()}${path}${toQueryString(options.query)}`, {
     method: options.method,
     headers,
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
@@ -101,6 +106,20 @@ async function request<T>(path: string, options: RequestOptions): Promise<T> {
     return undefined as T;
   }
   return (await response.json()) as T;
+}
+
+function toQueryString(query: RequestOptions["query"]): string {
+  if (!query) {
+    return "";
+  }
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined) {
+      params.set(key, String(value));
+    }
+  }
+  const serialized = params.toString();
+  return serialized ? `?${serialized}` : "";
 }
 
 async function toApiError(response: Response): Promise<ApiError> {

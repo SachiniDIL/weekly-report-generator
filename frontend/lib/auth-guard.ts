@@ -1,9 +1,7 @@
 import type { AuthUser, Role } from "@/lib/api-client";
+import { landingRouteForRole } from "@/lib/landing-route";
 
 const LOGIN_ROUTE = "/login";
-// No role-specific pages exist yet, so a forbidden role always falls back here. Point this
-// somewhere more specific once real role-gated pages exist.
-const FORBIDDEN_ROLE_FALLBACK_ROUTE = "/dashboard";
 
 export interface AuthGuardState {
   isLoading: boolean;
@@ -35,7 +33,7 @@ export function evaluateAuthGuard(
   }
 
   if (allowedRoles && !allowedRoles.includes(state.user.role)) {
-    return { redirectTo: FORBIDDEN_ROLE_FALLBACK_ROUTE, isChecking: true };
+    return { redirectTo: landingRouteForRole(state.user.role), isChecking: true };
   }
 
   return { redirectTo: null, isChecking: false };

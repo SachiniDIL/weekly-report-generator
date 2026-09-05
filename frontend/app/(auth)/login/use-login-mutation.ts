@@ -1,16 +1,16 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import type { AuthUser } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
+import { landingRouteForRole } from "@/lib/landing-route";
 import type { Credentials } from "./validate-credentials";
-
-const LANDING_ROUTE = "/dashboard";
 
 export function useLoginMutation() {
   const { login } = useAuth();
   const router = useRouter();
 
-  return useMutation<void, Error, Credentials>({
+  return useMutation<AuthUser, Error, Credentials>({
     mutationFn: ({ email, password }) => login(email, password),
-    onSuccess: () => router.push(LANDING_ROUTE),
+    onSuccess: (user) => router.push(landingRouteForRole(user.role)),
   });
 }
