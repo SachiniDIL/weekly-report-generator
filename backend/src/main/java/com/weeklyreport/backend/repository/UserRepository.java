@@ -1,5 +1,6 @@
 package com.weeklyreport.backend.repository;
 
+import com.weeklyreport.backend.domain.Role;
 import com.weeklyreport.backend.domain.User;
 import com.weeklyreport.backend.domain.UserStatus;
 import java.util.List;
@@ -12,4 +13,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
     List<User> findByStatus(UserStatus status, Sort sort);
+
+    List<User> findByStatusAndRole(UserStatus status, Role role, Sort sort);
 }
