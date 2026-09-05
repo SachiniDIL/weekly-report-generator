@@ -249,6 +249,35 @@ class ReportReviewIntegrationTest {
     }
 
     @Test
+    void currentVersionNoStaysConsistentWithTheVersionRowCountAcrossACorrectionCycle() throws Exception {
+        User member = persistUser("Member", "member@example.com", Role.MEMBER);
+        User manager = persistUser("Manager", "manager@example.com", Role.MANAGER);
+        Project project = persistProject();
+
+        long reportId = createReportWithOneTaskEntry(member, project.getId(), "Task");
+        assertCurrentVersionMatchesRowCount(reportId);
+
+        submit(member, reportId);
+        assertCurrentVersionMatchesRowCount(reportId);
+
+        requestChanges(manager, reportId);
+        assertCurrentVersionMatchesRowCount(reportId);
+
+        editContent(member, reportId);
+        assertCurrentVersionMatchesRowCount(reportId);
+
+        submit(member, reportId);
+        assertCurrentVersionMatchesRowCount(reportId);
+
+        approve(manager, reportId);
+        assertCurrentVersionMatchesRowCount(reportId);
+
+        Report finalReport = reportRepository.findById(reportId).orElseThrow();
+        assertThat(finalReport.getCurrentVersionNo()).isEqualTo(2);
+        assertThat(reportVersionRepository.findByReportIdOrderByVersionNoDesc(reportId)).hasSize(2);
+    }
+
+    @Test
     void versionHistoryRespectsTheSameVisibilityRuleAsReportDetail() throws Exception {
         User owner = persistUser("Owner", "owner@example.com", Role.MEMBER);
         User otherMember = persistUser("Other Member", "other@example.com", Role.MEMBER);
@@ -270,6 +299,45 @@ class ReportReviewIntegrationTest {
     private void submit(User member, long reportId) throws Exception {
         mockMvc.perform(post("/reports/" + reportId + "/submit").header("Authorization", bearer(member)))
                 .andExpect(status().isOk());
+    }
+
+    private void requestChanges(User manager, long reportId) throws Exception {
+        mockMvc.perform(post("/reports/" + reportId + "/review")
+                        .header("Authorization", bearer(manager))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"action": "CHANGES_REQUESTED", "comment": "Please revise"}
+                                """))
+                .andExpect(status().isOk());
+    }
+
+    private void approve(User manager, long reportId) throws Exception {
+        mockMvc.perform(post("/reports/" + reportId + "/review")
+                        .header("Authorization", bearer(manager))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"action": "APPROVED"}
+                                """))
+                .andExpect(status().isOk());
+    }
+
+    private void editContent(User member, long reportId) throws Exception {
+        mockMvc.perform(put("/reports/" + reportId)
+                        .header("Authorization", bearer(member))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"notes": "Revised", "taskEntries": [], "blockers": [],
+                                 "achievements": [], "hoursBreakdown": []}
+                                """))
+                .andExpect(status().isOk());
+    }
+
+    private void assertCurrentVersionMatchesRowCount(long reportId) {
+        Report report = reportRepository.findById(reportId).orElseThrow();
+        int versionRowCount = reportVersionRepository.findByReportIdOrderByVersionNoDesc(reportId).size();
+        assertThat(report.getCurrentVersionNo())
+                .as("Report.currentVersionNo must equal the number of ReportVersion rows for the report")
+                .isEqualTo(versionRowCount);
     }
 
     private long createReportWithOneTaskEntry(User owner, Long projectId, String taskName) throws Exception {

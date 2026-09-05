@@ -179,6 +179,24 @@ class ReportEndpointsIntegrationTest {
     }
 
     @Test
+    void aManagerCannotEditOrSubmitAReportTheyDoNotOwn() throws Exception {
+        // A manager can review and comment on this report, but must never be able to rewrite its
+        // content — the ownership check applies to a manager exactly as to any other non-owner.
+        User owner = persistUser("Owner", "owner@example.com", Role.MEMBER);
+        User manager = persistUser("Manager", "manager@example.com", Role.MANAGER);
+        long reportId = createDraftReport(owner);
+
+        mockMvc.perform(put("/reports/" + reportId)
+                        .header("Authorization", bearer(manager))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(emptyContentBody()))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/reports/" + reportId + "/submit").header("Authorization", bearer(manager)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void editingOrSubmittingANonEditableReportIsRejected() throws Exception {
         User owner = persistUser("Member", "member@example.com", Role.MEMBER);
         long reportId = createDraftReport(owner);
