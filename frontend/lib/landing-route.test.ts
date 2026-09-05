@@ -9,7 +9,7 @@ describe("landingRouteForRole", () => {
     expect(landingRouteForRole("MANAGER")).toBe("/projects");
   });
 
-  it("keeps ADMIN on the dashboard placeholder for now", () => {
-    expect(landingRouteForRole("ADMIN")).toBe("/dashboard");
+  it("sends an ADMIN to the user management page", () => {
+    expect(landingRouteForRole("ADMIN")).toBe("/admin/users");
   });
 });

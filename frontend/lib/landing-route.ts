@@ -3,8 +3,7 @@ import type { Role } from "@/lib/api-client";
 const LANDING_ROUTE_BY_ROLE: Record<Role, string> = {
   MEMBER: "/reports",
   MANAGER: "/projects",
-  // Admin has no dedicated frontend yet, so keep the placeholder dashboard for now.
-  ADMIN: "/dashboard",
+  ADMIN: "/admin/users",
 };
 
 /**
