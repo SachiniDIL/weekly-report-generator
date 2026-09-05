@@ -77,12 +77,15 @@ export function resetPassword(payload: ResetPasswordPayload): Promise<MessageRes
   return request("/auth/reset-password", { method: "POST", body: payload });
 }
 
-export type QueryValue = string | number | boolean | undefined;
+export type QueryValue = string | number | boolean | string[] | undefined;
 
 export interface RequestOptions {
   method: string;
   body?: unknown;
-  /** Serialized onto the URL; keys with an `undefined` value are dropped. */
+  /**
+   * Serialized onto the URL; keys with an `undefined` value are dropped, and an array value
+   * becomes a repeated key (e.g. Spring's `sort`).
+   */
   query?: Record<string, QueryValue>;
 }
 
@@ -114,7 +117,12 @@ function toQueryString(query: RequestOptions["query"]): string {
   }
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) {
-    if (value !== undefined) {
+    if (value === undefined) {
+      continue;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((item) => params.append(key, item));
+    } else {
       params.set(key, String(value));
     }
   }

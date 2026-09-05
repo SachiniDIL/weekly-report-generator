@@ -149,6 +149,8 @@ export interface ReportListFilters {
 export interface ListReportsParams extends ReportListFilters {
   page?: number;
   size?: number;
+  /** Spring sort clauses, e.g. `["weekStart,desc", "id,desc"]`. */
+  sort?: string[];
 }
 
 /** The slice of Spring's Page envelope the frontend actually reads. */
