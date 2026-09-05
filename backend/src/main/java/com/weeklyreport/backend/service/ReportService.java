@@ -24,20 +24,28 @@ import com.weeklyreport.backend.repository.ReportRepository;
 import com.weeklyreport.backend.repository.ReportVersionRepository;
 import com.weeklyreport.backend.repository.TaskEntryRepository;
 import java.time.Clock;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Draft/edit/submit lifecycle for a report's first version. A report and its version 1 are
- * created together; editing replaces that version's content wholesale in place; submitting
- * stamps it as final. Turning a correction cycle into a genuinely new version is a later step's
- * concern, not this one's.
+ * Draft/edit/submit lifecycle for a report's current version. A report and its version 1 are
+ * created together; editing replaces the current version's content wholesale in place; submitting
+ * stamps it as final. This also covers resubmission after a correction request — {@link
+ * ReportReviewService} is what opens the new version to edit; this class just treats
+ * NEEDS_CORRECTION as an equally valid editable/submittable state as DRAFT.
  */
 @Service
 public class ReportService {
+
+    // NEEDS_CORRECTION is equally editable/submittable as DRAFT: a correction cycle resumes
+    // editing on the new version the review step created, then resubmits it the same way.
+    private static final Set<ReportStatus> EDITABLE_STATUSES =
+            EnumSet.of(ReportStatus.DRAFT, ReportStatus.NEEDS_CORRECTION);
 
     private final ReportRepository reportRepository;
     private final ReportVersionRepository reportVersionRepository;
@@ -47,6 +55,7 @@ public class ReportService {
     private final AchievementRepository achievementRepository;
     private final HoursBreakdownRepository hoursBreakdownRepository;
     private final ReportContentLoader contentLoader;
+    private final CurrentReportVersionFinder currentVersionFinder;
     private final Clock clock;
 
     public ReportService(
@@ -58,6 +67,7 @@ public class ReportService {
             AchievementRepository achievementRepository,
             HoursBreakdownRepository hoursBreakdownRepository,
             ReportContentLoader contentLoader,
+            CurrentReportVersionFinder currentVersionFinder,
             Clock clock) {
         this.reportRepository = reportRepository;
         this.reportVersionRepository = reportVersionRepository;
@@ -67,6 +77,7 @@ public class ReportService {
         this.achievementRepository = achievementRepository;
         this.hoursBreakdownRepository = hoursBreakdownRepository;
         this.contentLoader = contentLoader;
+        this.currentVersionFinder = currentVersionFinder;
         this.clock = clock;
     }
 
@@ -96,11 +107,11 @@ public class ReportService {
     @Transactional
     public ReportResponse updateReportContent(long reportId, User caller, ReportContentRequest content) {
         Report report = getOwnedReport(reportId, caller);
-        if (report.getStatus() != ReportStatus.DRAFT) {
+        if (!EDITABLE_STATUSES.contains(report.getStatus())) {
             throw new InvalidReportStateException("Report " + reportId + " is not in an editable state");
         }
 
-        ReportVersion version = getCurrentVersion(report);
+        ReportVersion version = currentVersionFinder.get(report);
         replaceContent(version, content);
         return toResponse(report, version);
     }
@@ -108,11 +119,11 @@ public class ReportService {
     @Transactional
     public ReportResponse submitReport(long reportId, User caller) {
         Report report = getOwnedReport(reportId, caller);
-        if (report.getStatus() != ReportStatus.DRAFT) {
+        if (!EDITABLE_STATUSES.contains(report.getStatus())) {
             throw new InvalidReportStateException("Report " + reportId + " is not in a submittable state");
         }
 
-        ReportVersion version = getCurrentVersion(report);
+        ReportVersion version = currentVersionFinder.get(report);
         version.setSubmittedAt(clock.instant());
         report.setStatus(ReportStatus.SUBMITTED);
         return toResponse(report, version);
@@ -169,13 +180,6 @@ public class ReportService {
 
     private Report getReport(long id) {
         return reportRepository.findById(id).orElseThrow(() -> new ReportNotFoundException(id));
-    }
-
-    private ReportVersion getCurrentVersion(Report report) {
-        return reportVersionRepository
-                .findByReportIdAndVersionNo(report.getId(), report.getCurrentVersionNo())
-                .orElseThrow(() -> new IllegalStateException(
-                        "Report " + report.getId() + " has no version " + report.getCurrentVersionNo()));
     }
 
     private static ReportContentRequest orEmpty(ReportContentRequest content) {

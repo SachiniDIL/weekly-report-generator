@@ -1,15 +1,18 @@
 package com.weeklyreport.backend.service;
 
 import com.weeklyreport.backend.domain.Report;
-import com.weeklyreport.backend.domain.ReportVersion;
 import com.weeklyreport.backend.domain.Role;
 import com.weeklyreport.backend.domain.User;
 import com.weeklyreport.backend.dto.ReportListFilters;
 import com.weeklyreport.backend.dto.ReportListItemView;
 import com.weeklyreport.backend.dto.ReportResponse;
+import com.weeklyreport.backend.dto.ReportVersionHistoryItem;
+import com.weeklyreport.backend.dto.ReviewCommentView;
 import com.weeklyreport.backend.exception.ReportNotFoundException;
 import com.weeklyreport.backend.repository.ReportRepository;
 import com.weeklyreport.backend.repository.ReportVersionRepository;
+import com.weeklyreport.backend.repository.ReviewCommentRepository;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,15 +31,21 @@ public class ReportQueryService {
 
     private final ReportRepository reportRepository;
     private final ReportVersionRepository reportVersionRepository;
+    private final ReviewCommentRepository reviewCommentRepository;
     private final ReportContentLoader contentLoader;
+    private final CurrentReportVersionFinder currentVersionFinder;
 
     public ReportQueryService(
             ReportRepository reportRepository,
             ReportVersionRepository reportVersionRepository,
-            ReportContentLoader contentLoader) {
+            ReviewCommentRepository reviewCommentRepository,
+            ReportContentLoader contentLoader,
+            CurrentReportVersionFinder currentVersionFinder) {
         this.reportRepository = reportRepository;
         this.reportVersionRepository = reportVersionRepository;
+        this.reviewCommentRepository = reviewCommentRepository;
         this.contentLoader = contentLoader;
+        this.currentVersionFinder = currentVersionFinder;
     }
 
     @Transactional(readOnly = true)
@@ -53,16 +62,31 @@ public class ReportQueryService {
 
     @Transactional(readOnly = true)
     public ReportResponse getReportDetail(User caller, long reportId) {
+        Report report = getVisibleReport(caller, reportId);
+        return ReportResponse.from(report, contentLoader.load(currentVersionFinder.get(report)));
+    }
+
+    /** Newest first; each version carries its own content and the review comment made against it. */
+    @Transactional(readOnly = true)
+    public List<ReportVersionHistoryItem> getVersionHistory(User caller, long reportId) {
+        Report report = getVisibleReport(caller, reportId);
+
+        return reportVersionRepository.findByReportIdOrderByVersionNoDesc(report.getId()).stream()
+                .map(version -> new ReportVersionHistoryItem(
+                        contentLoader.load(version),
+                        reviewCommentRepository
+                                .findByReportVersionId(version.getId())
+                                .map(ReviewCommentView::from)
+                                .orElse(null)))
+                .toList();
+    }
+
+    private Report getVisibleReport(User caller, long reportId) {
         Report report = reportRepository.findById(reportId).orElseThrow(() -> new ReportNotFoundException(reportId));
         if (!canView(caller, report)) {
             throw new AccessDeniedException("You cannot view this report");
         }
-
-        ReportVersion version = reportVersionRepository
-                .findByReportIdAndVersionNo(report.getId(), report.getCurrentVersionNo())
-                .orElseThrow(() -> new IllegalStateException(
-                        "Report " + report.getId() + " has no version " + report.getCurrentVersionNo()));
-        return ReportResponse.from(report, contentLoader.load(version));
+        return report;
     }
 
     /**

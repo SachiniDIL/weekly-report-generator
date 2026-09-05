@@ -7,14 +7,19 @@ import com.weeklyreport.backend.dto.ReportContentRequest;
 import com.weeklyreport.backend.dto.ReportListFilters;
 import com.weeklyreport.backend.dto.ReportListItemView;
 import com.weeklyreport.backend.dto.ReportResponse;
+import com.weeklyreport.backend.dto.ReportVersionHistoryItem;
+import com.weeklyreport.backend.dto.ReviewRequest;
 import com.weeklyreport.backend.service.ReportQueryService;
+import com.weeklyreport.backend.service.ReportReviewService;
 import com.weeklyreport.backend.service.ReportService;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,10 +42,15 @@ public class ReportController {
 
     private final ReportService reportService;
     private final ReportQueryService reportQueryService;
+    private final ReportReviewService reportReviewService;
 
-    public ReportController(ReportService reportService, ReportQueryService reportQueryService) {
+    public ReportController(
+            ReportService reportService,
+            ReportQueryService reportQueryService,
+            ReportReviewService reportReviewService) {
         this.reportService = reportService;
         this.reportQueryService = reportQueryService;
+        this.reportReviewService = reportReviewService;
     }
 
     @GetMapping
@@ -79,5 +89,18 @@ public class ReportController {
     @PostMapping("/{id}/submit")
     public ReportResponse submitReport(@AuthenticationPrincipal User user, @PathVariable long id) {
         return reportService.submitReport(id, user);
+    }
+
+    @PostMapping("/{id}/review")
+    @PreAuthorize("hasRole('MANAGER')")
+    public ReportResponse review(
+            @AuthenticationPrincipal User manager, @PathVariable long id, @Valid @RequestBody ReviewRequest request) {
+        return reportReviewService.review(manager, id, request);
+    }
+
+    @GetMapping("/{id}/versions")
+    public List<ReportVersionHistoryItem> getVersionHistory(
+            @AuthenticationPrincipal User user, @PathVariable long id) {
+        return reportQueryService.getVersionHistory(user, id);
     }
 }
