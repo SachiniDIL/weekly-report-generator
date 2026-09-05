@@ -1,9 +1,7 @@
-import type { ReportResponse } from "@/lib/api/reports";
+import type { ReportContentResponse, ReportResponse } from "@/lib/api/reports";
 
 /** Read-only presentation of a report — used for the shared view route and for a report the member can no longer edit. */
 export function ReportContentView({ report }: { report: ReportResponse }) {
-  const { content } = report;
-
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
@@ -15,6 +13,15 @@ export function ReportContentView({ report }: { report: ReportResponse }) {
         </p>
       </header>
 
+      <ReportContentBody content={report.content} />
+    </div>
+  );
+}
+
+/** Just the content sections of one version — shared by the current-report view and each row of the version history. */
+export function ReportContentBody({ content }: { content: ReportContentResponse }) {
+  return (
+    <div className="flex flex-col gap-6">
       <TextBlock label="Planned for next week" value={content.tasksPlannedNext} />
       <TextBlock label="Notes" value={content.notes} />
       <TextBlock label="Links" value={content.links} />
