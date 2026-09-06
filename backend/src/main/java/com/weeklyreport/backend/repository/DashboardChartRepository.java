@@ -11,8 +11,9 @@ import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
 
 /**
- * Cross-entity aggregations feeding the manager dashboard charts. Every query is scoped to a
- * report's current version — a corrected report's older child rows may no longer apply.
+ * Cross-entity aggregations feeding the manager dashboard charts and member profiles. Every
+ * query is scoped to a report's current version — a corrected report's older child rows may no
+ * longer apply.
  */
 public interface DashboardChartRepository extends Repository<Report, Long> {
 
@@ -39,10 +40,17 @@ public interface DashboardChartRepository extends Repository<Report, Long> {
             where rv.versionNo = r.currentVersionNo
               and r.weekStart = :weekStart and r.weekEnd = :weekEnd
             group by r.project.name
+            order by count(te) desc
             """)
     List<ProjectWorkloadPoint> taskCountByProject(
             @Param("weekStart") LocalDate weekStart, @Param("weekEnd") LocalDate weekEnd);
 
+    /**
+     * Hours by task type, biggest first. {@code userId} narrows to one member (null = team-wide);
+     * {@code weekStart}/{@code weekEnd} pin a week (null = all-time) — the member profile passes
+     * a user and no week, the chart passes a week and no user. {@code coalesce} rather than
+     * {@code :param is null} keeps Postgres able to infer each parameter's type.
+     */
     @Query(
             """
             select new com.weeklyreport.backend.dto.TaskTypeHoursPoint(hb.taskType, sum(hb.hours))
@@ -50,9 +58,14 @@ public interface DashboardChartRepository extends Repository<Report, Long> {
               join rv.report r
               join HoursBreakdown hb on hb.reportVersionId = rv.id
             where rv.versionNo = r.currentVersionNo
-              and r.weekStart = :weekStart and r.weekEnd = :weekEnd
+              and r.user.id = coalesce(:userId, r.user.id)
+              and r.weekStart = coalesce(:weekStart, r.weekStart)
+              and r.weekEnd = coalesce(:weekEnd, r.weekEnd)
             group by hb.taskType
+            order by sum(hb.hours) desc
             """)
     List<TaskTypeHoursPoint> hoursByTaskType(
-            @Param("weekStart") LocalDate weekStart, @Param("weekEnd") LocalDate weekEnd);
+            @Param("userId") Long userId,
+            @Param("weekStart") LocalDate weekStart,
+            @Param("weekEnd") LocalDate weekEnd);
 }

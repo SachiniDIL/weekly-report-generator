@@ -1,17 +1,20 @@
 package com.weeklyreport.backend.controller;
 
 import com.weeklyreport.backend.dto.DashboardSummaryResponse;
+import com.weeklyreport.backend.dto.MemberProfileResponse;
 import com.weeklyreport.backend.dto.MemberSubmissionStatus;
 import com.weeklyreport.backend.dto.ProjectWorkloadPoint;
 import com.weeklyreport.backend.dto.TaskTypeHoursPoint;
 import com.weeklyreport.backend.dto.WeeklyTaskCompletionPoint;
 import com.weeklyreport.backend.service.DashboardChartService;
 import com.weeklyreport.backend.service.DashboardService;
+import com.weeklyreport.backend.service.MemberProfileService;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,16 +26,25 @@ public class DashboardController {
 
     private final DashboardService dashboardService;
     private final DashboardChartService dashboardChartService;
+    private final MemberProfileService memberProfileService;
 
     public DashboardController(
-            DashboardService dashboardService, DashboardChartService dashboardChartService) {
+            DashboardService dashboardService,
+            DashboardChartService dashboardChartService,
+            MemberProfileService memberProfileService) {
         this.dashboardService = dashboardService;
         this.dashboardChartService = dashboardChartService;
+        this.memberProfileService = memberProfileService;
     }
 
     @GetMapping("/summary")
     public DashboardSummaryResponse getSummary() {
         return dashboardService.getSummary();
+    }
+
+    @GetMapping("/team/{userId}")
+    public MemberProfileResponse getMemberProfile(@PathVariable long userId) {
+        return memberProfileService.getMemberProfile(userId);
     }
 
     @GetMapping("/charts/tasks-completed-trend")

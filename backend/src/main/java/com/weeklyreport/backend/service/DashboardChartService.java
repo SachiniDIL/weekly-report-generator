@@ -16,7 +16,6 @@ import java.time.ZoneOffset;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -80,17 +79,13 @@ public class DashboardChartService {
     @Transactional(readOnly = true)
     public List<ProjectWorkloadPoint> workloadByProject(LocalDate weekStart, LocalDate weekEnd) {
         Week week = resolveWeek(weekStart, weekEnd);
-        return chartRepository.taskCountByProject(week.start(), week.end()).stream()
-                .sorted(Comparator.comparingLong(ProjectWorkloadPoint::taskCount).reversed())
-                .toList();
+        return chartRepository.taskCountByProject(week.start(), week.end());
     }
 
     @Transactional(readOnly = true)
     public List<TaskTypeHoursPoint> timeByTaskType(LocalDate weekStart, LocalDate weekEnd) {
         Week week = resolveWeek(weekStart, weekEnd);
-        return chartRepository.hoursByTaskType(week.start(), week.end()).stream()
-                .sorted(Comparator.comparing(TaskTypeHoursPoint::totalHours).reversed())
-                .toList();
+        return chartRepository.hoursByTaskType(null, week.start(), week.end());
     }
 
     private static MemberSubmissionStatus.Status leastAdvanced(

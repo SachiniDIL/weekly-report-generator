@@ -12,6 +12,11 @@ public interface ReportRepository
 
     long countByStatus(ReportStatus status);
 
+    long countByUserIdAndStatus(Long userId, ReportStatus status);
+
+    /** One member's reports that have moved past DRAFT — i.e. have been submitted at least once. */
+    long countByUserIdAndStatusNot(Long userId, ReportStatus status);
+
     List<Report> findByWeekStartAndWeekEnd(LocalDate weekStart, LocalDate weekEnd);
 
     /** Reports whose week contains {@code today} and that have moved past DRAFT. */
