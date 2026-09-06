@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   getDashboardSummary,
+  getMemberProfile,
   getSectionComparison,
   getSubmissionStatusByMember,
   getTasksCompletedTrend,
@@ -36,6 +37,15 @@ export function useWorkloadByProjectQuery() {
 
 export function useTimeByTaskTypeQuery() {
   return useQuery({ queryKey: ["dashboard", "time-by-task-type"], queryFn: getTimeByTaskType });
+}
+
+export function useMemberProfileQuery(userId: number) {
+  return useQuery({
+    queryKey: ["dashboard", "team", userId],
+    queryFn: () => getMemberProfile(userId),
+    enabled: Number.isFinite(userId),
+    retry: false,
+  });
 }
 
 export function useSectionComparisonQuery(params: SectionComparisonParams) {

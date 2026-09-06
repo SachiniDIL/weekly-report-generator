@@ -36,6 +36,15 @@ export interface TaskTypeHoursPoint {
   totalHours: number;
 }
 
+export interface MemberProfile {
+  id: number;
+  name: string;
+  email: string;
+  totalReportsSubmitted: number;
+  needsCorrectionCount: number;
+  hoursByTaskType: TaskTypeHoursPoint[];
+}
+
 export type DashboardSectionName = "blockers" | "achievements";
 
 export interface SectionItem {
@@ -74,6 +83,10 @@ export function getWorkloadByProject(): Promise<ProjectWorkloadPoint[]> {
 
 export function getTimeByTaskType(): Promise<TaskTypeHoursPoint[]> {
   return request("/dashboard/charts/time-by-task-type", { method: "GET" });
+}
+
+export function getMemberProfile(userId: number): Promise<MemberProfile> {
+  return request(`/dashboard/team/${userId}`, { method: "GET" });
 }
 
 export function getSectionComparison(
