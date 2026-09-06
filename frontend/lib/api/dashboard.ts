@@ -36,6 +36,26 @@ export interface TaskTypeHoursPoint {
   totalHours: number;
 }
 
+export type DashboardSectionName = "blockers" | "achievements";
+
+export interface SectionItem {
+  description: string;
+  /** The item the member flagged as the one that matters most this week. */
+  key: boolean;
+}
+
+export interface MemberSectionView {
+  memberName: string;
+  status: MemberWeekStatus;
+  items: SectionItem[];
+}
+
+export interface SectionComparisonParams {
+  section: DashboardSectionName;
+  weekStart?: string;
+  weekEnd?: string;
+}
+
 export function getDashboardSummary(): Promise<DashboardSummary> {
   return request("/dashboard/summary", { method: "GET" });
 }
@@ -54,4 +74,17 @@ export function getWorkloadByProject(): Promise<ProjectWorkloadPoint[]> {
 
 export function getTimeByTaskType(): Promise<TaskTypeHoursPoint[]> {
   return request("/dashboard/charts/time-by-task-type", { method: "GET" });
+}
+
+export function getSectionComparison(
+  params: SectionComparisonParams,
+): Promise<MemberSectionView[]> {
+  return request("/dashboard/section", {
+    method: "GET",
+    query: {
+      section: params.section,
+      weekStart: params.weekStart,
+      weekEnd: params.weekEnd,
+    },
+  });
 }

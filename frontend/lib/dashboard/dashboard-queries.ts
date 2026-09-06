@@ -1,10 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   getDashboardSummary,
+  getSectionComparison,
   getSubmissionStatusByMember,
   getTasksCompletedTrend,
   getTimeByTaskType,
   getWorkloadByProject,
+  type SectionComparisonParams,
 } from "@/lib/api/dashboard";
 
 export function useDashboardSummaryQuery() {
@@ -34,4 +36,18 @@ export function useWorkloadByProjectQuery() {
 
 export function useTimeByTaskTypeQuery() {
   return useQuery({ queryKey: ["dashboard", "time-by-task-type"], queryFn: getTimeByTaskType });
+}
+
+export function useSectionComparisonQuery(params: SectionComparisonParams) {
+  return useQuery({
+    queryKey: [
+      "dashboard",
+      "section",
+      params.section,
+      params.weekStart ?? null,
+      params.weekEnd ?? null,
+    ],
+    queryFn: () => getSectionComparison(params),
+    placeholderData: keepPreviousData,
+  });
 }

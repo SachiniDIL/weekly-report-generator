@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { setAuthToken } from "@/lib/api-client";
 import { AuthProvider } from "@/lib/auth-context";
@@ -82,6 +82,14 @@ const TIME_BY_TYPE = [
   { taskType: "REVIEW", totalHours: 6 },
 ];
 
+const SECTION_VIEW = [
+  {
+    memberName: "Alice",
+    status: "SUBMITTED" as const,
+    items: [{ description: "Blocked on staging credentials", key: true }],
+  },
+];
+
 function dashboardBackend() {
   return jest.fn(async (rawUrl: string) => {
     const { pathname } = new URL(rawUrl);
@@ -90,6 +98,7 @@ function dashboardBackend() {
     if (pathname === "/dashboard/charts/submission-status-by-member") return json(SUBMISSION_STATUS);
     if (pathname === "/dashboard/charts/workload-by-project") return json(WORKLOAD);
     if (pathname === "/dashboard/charts/time-by-task-type") return json(TIME_BY_TYPE);
+    if (pathname === "/dashboard/section") return json(SECTION_VIEW);
     throw new Error(`unexpected request: ${pathname}`);
   });
 }
@@ -140,6 +149,18 @@ describe("ManagerDashboardPage", () => {
     expect(screen.getByText("Submitted")).toBeInTheDocument();
     expect(screen.getByText("Bob")).toBeInTheDocument();
     expect(screen.getByText("Not started")).toBeInTheDocument();
+  });
+
+  it("swaps the overview for the section comparison when its tab is selected", async () => {
+    renderWithQueryClient(<ManagerDashboardPage />);
+
+    expect(await screen.findByText("Submitted this week")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Section comparison" }));
+
+    expect(await screen.findByText("Blocked on staging credentials")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Blockers" })).toBeInTheDocument();
+    expect(screen.queryByText("Submitted this week")).not.toBeInTheDocument();
   });
 
   it("renders for a MANAGER inside the (manager) route group", async () => {
