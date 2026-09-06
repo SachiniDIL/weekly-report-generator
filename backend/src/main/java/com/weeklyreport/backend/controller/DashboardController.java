@@ -1,7 +1,9 @@
 package com.weeklyreport.backend.controller;
 
+import com.weeklyreport.backend.dto.DashboardSection;
 import com.weeklyreport.backend.dto.DashboardSummaryResponse;
 import com.weeklyreport.backend.dto.MemberProfileResponse;
+import com.weeklyreport.backend.dto.MemberSectionView;
 import com.weeklyreport.backend.dto.MemberSubmissionStatus;
 import com.weeklyreport.backend.dto.ProjectWorkloadPoint;
 import com.weeklyreport.backend.dto.TaskTypeHoursPoint;
@@ -9,6 +11,7 @@ import com.weeklyreport.backend.dto.WeeklyTaskCompletionPoint;
 import com.weeklyreport.backend.service.DashboardChartService;
 import com.weeklyreport.backend.service.DashboardService;
 import com.weeklyreport.backend.service.MemberProfileService;
+import com.weeklyreport.backend.service.SectionComparisonService;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -27,19 +30,31 @@ public class DashboardController {
     private final DashboardService dashboardService;
     private final DashboardChartService dashboardChartService;
     private final MemberProfileService memberProfileService;
+    private final SectionComparisonService sectionComparisonService;
 
     public DashboardController(
             DashboardService dashboardService,
             DashboardChartService dashboardChartService,
-            MemberProfileService memberProfileService) {
+            MemberProfileService memberProfileService,
+            SectionComparisonService sectionComparisonService) {
         this.dashboardService = dashboardService;
         this.dashboardChartService = dashboardChartService;
         this.memberProfileService = memberProfileService;
+        this.sectionComparisonService = sectionComparisonService;
     }
 
     @GetMapping("/summary")
     public DashboardSummaryResponse getSummary() {
         return dashboardService.getSummary();
+    }
+
+    @GetMapping("/section")
+    public List<MemberSectionView> compareSection(
+            @RequestParam String section,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekEnd) {
+        return sectionComparisonService.compareSection(
+                DashboardSection.parse(section), weekStart, weekEnd);
     }
 
     @GetMapping("/team/{userId}")
