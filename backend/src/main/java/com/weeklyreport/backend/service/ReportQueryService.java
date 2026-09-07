@@ -60,6 +60,23 @@ public class ReportQueryService {
                 .map(ReportListItemView::from);
     }
 
+    /**
+     * Every report matching {@code filters}, each with its current version's content loaded.
+     * Same role-scoping as {@link #listReports} but unpaged — the AI context digest needs the
+     * whole matching set at once, and at this scale that set is small.
+     */
+    @Transactional(readOnly = true)
+    public List<ReportResponse> listReportsWithContent(User caller, ReportListFilters filters) {
+        if (caller.getRole() == Role.ADMIN) {
+            throw new AccessDeniedException("Admins cannot view reports");
+        }
+
+        ReportListFilters scopedFilters = scopeToCaller(caller, filters);
+        return reportRepository.findAll(ReportSpecifications.matching(scopedFilters), Sort.by("id")).stream()
+                .map(report -> ReportResponse.from(report, contentLoader.load(currentVersionFinder.get(report))))
+                .toList();
+    }
+
     @Transactional(readOnly = true)
     public ReportResponse getReportDetail(User caller, long reportId) {
         Report report = getVisibleReport(caller, reportId);
