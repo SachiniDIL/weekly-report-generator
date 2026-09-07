@@ -3,6 +3,7 @@ package com.weeklyreport.backend.config;
 import com.weeklyreport.backend.repository.UserRepository;
 import com.weeklyreport.backend.security.JwtAuthenticationFilter;
 import com.weeklyreport.backend.security.JwtService;
+import com.weeklyreport.backend.security.RateLimitFilter;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import tools.jackson.databind.ObjectMapper;
 
 @Configuration
 @EnableWebSecurity
@@ -29,10 +31,13 @@ public class SecurityConfig {
             HttpSecurity http,
             JwtService jwtService,
             UserRepository userRepository,
-            CorsConfigurationSource corsConfigurationSource)
+            CorsConfigurationSource corsConfigurationSource,
+            ObjectMapper objectMapper,
+            @Value("${rate-limit.enabled:true}") boolean rateLimitEnabled)
             throws Exception {
         JwtAuthenticationFilter jwtAuthenticationFilter =
                 new JwtAuthenticationFilter(jwtService, userRepository);
+        RateLimitFilter rateLimitFilter = new RateLimitFilter(objectMapper, rateLimitEnabled);
 
         http.cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable())
@@ -40,7 +45,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/auth/**").permitAll()
                         .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(rateLimitFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

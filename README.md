@@ -166,6 +166,7 @@ the app already binds to it. Set these environment variables:
 | `FRONTEND_URL`                                              | **the production Vercel URL** (e.g. `https://your-app.vercel.app`)                    |
 | `BREVO_API_KEY` / `BREVO_SENDER_EMAIL`                      | transactional email (password reset)                                                  |
 | `GEMINI_API_KEY` / `GEMINI_MODEL`                           | AI assistant; use a current model id such as `gemini-3.6-flash` (AI Studio free tier) |
+| `RATE_LIMIT_ENABLED`                                        | optional; per-IP limiting on the `/auth` endpoints, on unless set to `false`          |
 
 **CORS:** the backend allows exactly one origin, taken from `FRONTEND_URL` — the
 same variable used to build password-reset links. Setting `FRONTEND_URL` to the
