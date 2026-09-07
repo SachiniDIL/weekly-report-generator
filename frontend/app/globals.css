@@ -1,54 +1,65 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   Dusk Glass theme
-   Palette + semantic components live here (Tailwind v4 CSS config, no JS file).
-   Retrofit rules below are intentionally *unlayered* so they win over the
-   ad-hoc Tailwind utility classes the pre-theme components still carry.
+   Soft UI (Neumorphism) — light theme
+   One surface colour for everything; depth comes from paired shadows
+   (dark bottom-right, light top-left). Retrofit rules stay *unlayered* so they
+   win over the ad-hoc Tailwind utility classes the components still carry.
    ========================================================================== */
 
 :root {
-  --bg-base: #0d1229;
-  --bg-surface: #111827;
-  --bg-panel: rgba(20, 30, 65, 0.5);
-  --bg-panel-hover: rgba(30, 41, 80, 0.7);
-  --bg-sidebar: rgba(15, 20, 40, 0.95);
+  /* the single surface colour — background, sidebar, cards, inputs all share it */
+  --nm-bg: #e8ecf3;
+  --nm-shadow-dark: #c7cdd9;
+  --nm-shadow-light: #ffffff;
 
-  --border-subtle: rgba(99, 120, 200, 0.12);
-  --border-active: rgba(99, 102, 241, 0.5);
+  --nm-raised: 6px 6px 14px var(--nm-shadow-dark), -6px -6px 14px var(--nm-shadow-light);
+  --nm-raised-sm: 3px 3px 8px var(--nm-shadow-dark), -3px -3px 8px var(--nm-shadow-light);
+  --nm-inset: inset 4px 4px 9px var(--nm-shadow-dark), inset -4px -4px 9px var(--nm-shadow-light);
+  --nm-inset-sm: inset 2px 2px 5px var(--nm-shadow-dark), inset -2px -2px 5px var(--nm-shadow-light);
 
-  --text-primary: #e0e7ff;
-  --text-secondary: #6272a4;
-  --text-muted: #4c5680;
+  --bg-base: var(--nm-bg);
+  --bg-surface: var(--nm-bg);
+  --bg-panel: var(--nm-bg);
+  --bg-panel-hover: var(--nm-bg);
+  --bg-sidebar: var(--nm-bg);
+  --panel-shadow: var(--nm-raised);
+  --panel-border: transparent;
 
-  --accent: #6366f1;
-  --accent-light: #a5b4fc;
-  --accent-glow: rgba(99, 102, 241, 0.35);
+  --border-subtle: rgba(57, 65, 90, 0.1);
+  --border-active: rgba(91, 99, 230, 0.45);
 
-  --input-bg: rgba(15, 20, 40, 0.6);
-  --input-border: rgba(99, 120, 200, 0.2);
-  --row-hover: rgba(99, 102, 241, 0.06);
+  --text-primary: #39415a;
+  --text-secondary: #767f95;
+  --text-muted: #a6aec0;
 
-  --danger: #f87171;
-  --success: #4ade80;
-  --warning: #fb923c;
+  --accent: #5b63e6;
+  --accent-light: #4f46e5;
+  --accent-glow: rgba(91, 99, 230, 0.25);
 
-  /* Legacy tokens the scaffold shipped with — repointed at the theme so any
-     leftover bg-background / text-foreground usage still reads correctly. */
-  --background: var(--bg-surface);
+  --input-bg: var(--nm-bg);
+  --input-border: transparent;
+  --row-hover: rgba(91, 99, 230, 0.07);
+
+  --danger: #dc4c4c;
+  --success: #2f9e5f;
+  --warning: #d97b1f;
+
+  /* Legacy scaffold tokens — repointed at the theme. */
+  --background: var(--nm-bg);
   --foreground: var(--text-primary);
 }
 
 @theme inline {
-  --color-background: var(--bg-surface);
+  --color-background: var(--nm-bg);
   --color-foreground: var(--text-primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  --color-dusk-base: var(--bg-base);
-  --color-dusk-surface: var(--bg-surface);
-  --color-dusk-panel: var(--bg-panel);
-  --color-dusk-sidebar: var(--bg-sidebar);
+  --color-dusk-base: var(--nm-bg);
+  --color-dusk-surface: var(--nm-bg);
+  --color-dusk-panel: var(--nm-bg);
+  --color-dusk-sidebar: var(--nm-bg);
   --color-dusk-border: var(--border-subtle);
   --color-dusk-border-active: var(--border-active);
   --color-dusk-primary: var(--text-primary);
@@ -64,13 +75,12 @@
 /* ---- base ---------------------------------------------------------------- */
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   min-height: 100vh;
-  background: linear-gradient(155deg, #0d1229 0%, #111827 60%, #0f172a 100%);
-  background-attachment: fixed;
+  background: var(--nm-bg);
   color: var(--text-primary);
   font-family:
     var(--font-geist-sans),
@@ -90,7 +100,7 @@ body {
 
 ::selection {
   background: var(--accent-glow);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 /* Route changes fade rather than cut hard. */
@@ -120,27 +130,24 @@ main {
   }
 }
 
-/* ---- form controls ---------------------------------------------------------
-   Element selectors, unlayered — override Tailwind utilities on the same node. */
+/* ---- form controls — pressed into the surface ---------------------------- */
 
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
 textarea,
 select {
-  background: var(--input-bg);
-  border: 1px solid var(--input-border);
+  background: var(--nm-bg);
+  border: 1px solid transparent;
   color: var(--text-primary);
-  border-radius: 8px;
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+  border-radius: 10px;
+  box-shadow: var(--nm-inset-sm);
+  transition: box-shadow 0.15s ease;
 }
 
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
 textarea:focus,
 select:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  box-shadow: var(--nm-inset-sm), 0 0 0 2px rgba(91, 99, 230, 0.35);
 }
 
 input[type="checkbox"],
@@ -149,11 +156,11 @@ input[type="radio"] {
 }
 
 select option {
-  background: var(--bg-surface);
+  background: #ffffff;
   color: var(--text-primary);
 }
 
-/* ---- retrofit: remap the ad-hoc colours the pre-theme components carry ---- */
+/* ---- retrofit: remap the ad-hoc classes the components carry ------------- */
 
 :where(
   [class~="border-black/10"],
@@ -169,9 +176,7 @@ select option {
   border-color: var(--border-subtle);
 }
 
-/* Container elements with a full (all-sides) subtle border become glass panels.
-   Buttons/links/<p> and single-side dividers (border-t/b only) are excluded so
-   ghost buttons, empty-states and divider bars keep their shape. */
+/* Container elements with a full border become raised soft-UI cards. */
 :where(section, article, aside, header, form, fieldset, dl, ul, ol, li, div):where([class~="border"]):where(
     [class~="border-black/10"],
     [class~="border-black/15"],
@@ -181,27 +186,47 @@ select option {
     [class~="border-white/20"],
     [class~="border-white/25"]
   ) {
-  background: var(--bg-panel);
-  border-radius: 12px;
-  transition: all 0.2s ease;
+  background: var(--nm-bg);
+  border-color: transparent;
+  border-radius: 16px;
+  box-shadow: var(--nm-raised);
+  transition: box-shadow 0.2s ease;
 }
 
-:where(section, article, aside, header, form, fieldset, dl, ul, ol, li, div):where([class~="border"]):where(
-    [class~="border-black/10"],
-    [class~="border-black/15"],
+/* Misc bordered secondary buttons → raised soft-UI buttons. */
+button:where([class~="border"]):where(
     [class~="border-black/20"],
-    [class~="border-white/10"],
-    [class~="border-white/15"],
     [class~="border-white/20"],
     [class~="border-white/25"]
-  ):hover {
-  border-color: var(--border-active);
-  background: var(--bg-panel-hover);
+  ) {
+  background: var(--nm-bg);
+  border-color: transparent;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  box-shadow: var(--nm-raised-sm);
+  transition: box-shadow 0.15s ease, color 0.15s ease;
+}
+button:where([class~="border"]):where(
+    [class~="border-black/20"],
+    [class~="border-white/20"],
+    [class~="border-white/25"]
+  ):hover:not(:disabled) {
+  color: var(--accent-light);
+  box-shadow: var(--nm-raised);
+}
+button:where([class~="border"]):where(
+    [class~="border-black/20"],
+    [class~="border-white/20"],
+    [class~="border-white/25"]
+  ):active:not(:disabled) {
+  box-shadow: var(--nm-inset-sm);
 }
 
-/* Faint neutral fills → subtle indigo tint. */
+/* Faint neutral fills → pressed-in notes. */
 :where([class*="bg-black/"], [class*="bg-white/"]) {
-  background-color: rgba(99, 120, 200, 0.06);
+  background-color: var(--nm-bg);
+  border-radius: 12px;
+  box-shadow: var(--nm-inset-sm);
 }
 
 /* Divider borders. */
@@ -228,36 +253,46 @@ select option {
 
 /* Alert / banner fills. */
 :where(.bg-red-50, .bg-red-950) {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: rgba(220, 76, 76, 0.1);
+  box-shadow: none;
 }
 :where(.bg-green-50, .bg-green-950) {
-  background-color: rgba(74, 222, 128, 0.1);
+  background-color: rgba(47, 158, 95, 0.12);
+  box-shadow: none;
 }
 :where(.bg-amber-50, .bg-amber-950, .bg-amber-950\/40) {
-  background-color: rgba(251, 146, 60, 0.1);
+  background-color: rgba(217, 123, 31, 0.12);
+  box-shadow: none;
 }
 :where(.border-amber-300, .border-amber-500, .border-amber-800, .border-amber-400\/40) {
-  border-color: rgba(251, 146, 60, 0.35);
+  border-color: rgba(217, 123, 31, 0.4);
 }
 :where(.bg-amber-500) {
   background-color: var(--warning);
 }
 
-/* Primary buttons: any `bg-foreground … text-background` node. */
+/* Primary buttons: any `bg-foreground` node — raised accent pill. */
 :where([class~="bg-foreground"]) {
-  background: linear-gradient(135deg, #6366f1, #818cf8);
+  background: var(--accent);
   color: #fff;
-  border-radius: 8px;
+  border-radius: 12px;
+  box-shadow:
+    5px 5px 12px rgba(91, 99, 230, 0.3),
+    -5px -5px 12px var(--nm-shadow-light);
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 button:where([class~="bg-foreground"]):hover:not(:disabled),
 a:where([class~="bg-foreground"]):hover {
   transform: translateY(-1px);
   box-shadow:
-    0 4px 20px rgba(99, 102, 241, 0.5),
-    0 0 0 1px rgba(129, 140, 248, 0.3);
+    6px 6px 16px rgba(91, 99, 230, 0.42),
+    -6px -6px 16px var(--nm-shadow-light);
+}
+button:where([class~="bg-foreground"]):active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: inset 3px 3px 8px rgba(60, 50, 160, 0.35);
 }
 :where(.text-background) {
   color: #fff;
@@ -273,35 +308,35 @@ button:where([class~="underline"]) {
   text-underline-offset: 2px;
 }
 a:where([class~="underline"]):hover {
-  color: #c7d2fe;
+  color: #3730a3;
 }
 
-/* ---- semantic component classes --------------------------------------------
-   Prefer these on new markup; the retrofit above covers existing markup. */
+/* ---- semantic component classes ---------------------------------------------- */
 
 .dusk-panel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  transition: all 0.2s ease;
+  background: var(--nm-bg);
+  border: 1px solid transparent;
+  border-radius: 16px;
+  box-shadow: var(--nm-raised);
+  transition: box-shadow 0.2s ease;
 }
 .dusk-panel:hover {
-  border-color: var(--border-active);
-  background: var(--bg-panel-hover);
+  box-shadow: var(--nm-raised);
 }
 
 .dusk-surface {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
+  background: var(--nm-bg);
+  border: 1px solid transparent;
+  border-radius: 16px;
+  box-shadow: var(--nm-raised);
 }
 
 .dusk-row {
-  border-radius: 6px;
-  transition: background-color 0.15s ease;
+  border-radius: 10px;
+  transition: box-shadow 0.15s ease;
 }
 .dusk-row:hover {
-  background: var(--row-hover);
+  box-shadow: var(--nm-inset-sm);
 }
 
 .dusk-content {
@@ -309,96 +344,87 @@ a:where([class~="underline"]):hover {
 }
 
 .dusk-banner {
-  background: rgba(99, 102, 241, 0.15);
+  background: rgba(91, 99, 230, 0.1);
   color: var(--accent-light);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  border-radius: 8px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  box-shadow: var(--nm-inset-sm);
 }
 .dusk-banner-success {
-  background: rgba(74, 222, 128, 0.1);
-  color: var(--success);
-  border: 1px solid rgba(74, 222, 128, 0.25);
-  border-radius: 8px;
+  background: rgba(47, 158, 95, 0.12);
+  color: #21794a;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  box-shadow: var(--nm-inset-sm);
 }
 .dusk-banner-error {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--danger);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  border-radius: 8px;
+  background: rgba(220, 76, 76, 0.1);
+  color: #b91c1c;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  box-shadow: var(--nm-inset-sm);
 }
 
 .dusk-input-error {
-  border-color: rgba(248, 113, 113, 0.6) !important;
-  border-left-width: 3px !important;
+  box-shadow: var(--nm-inset-sm), 0 0 0 1.5px rgba(220, 76, 76, 0.55) !important;
 }
 
-/* ---- status badges -------------------------------------------------------- */
+/* ---- status badges — soft tinted pills ---------------------------------------- */
 
 .dusk-badge {
   display: inline-block;
-  border-radius: 6px;
+  border-radius: 999px;
   padding: 0.125rem 0.5rem;
   font-size: 0.75rem;
   line-height: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   border: 1px solid transparent;
   white-space: nowrap;
 }
 .dusk-badge[data-status="APPROVED"],
 .dusk-badge[data-status="ACTIVE"] {
-  background: rgba(74, 222, 128, 0.1);
-  color: #4ade80;
-  border-color: rgba(74, 222, 128, 0.2);
+  background: rgba(47, 158, 95, 0.16);
+  color: #1d7a46;
 }
 .dusk-badge[data-status="SUBMITTED"] {
-  background: rgba(129, 140, 248, 0.1);
-  color: #a5b4fc;
-  border-color: rgba(129, 140, 248, 0.2);
+  background: rgba(91, 99, 230, 0.15);
+  color: #4338ca;
 }
 .dusk-badge[data-status="NEEDS_CORRECTION"] {
-  background: rgba(251, 146, 60, 0.1);
-  color: #fb923c;
-  border-color: rgba(251, 146, 60, 0.2);
+  background: rgba(217, 123, 31, 0.18);
+  color: #b45309;
 }
 .dusk-badge[data-status="DRAFT"] {
-  background: rgba(99, 120, 200, 0.08);
-  color: #6272a4;
-  border-color: rgba(99, 120, 200, 0.15);
+  background: rgba(57, 65, 90, 0.09);
+  color: #5b6478;
 }
 .dusk-badge[data-status="NOT_STARTED"] {
-  background: rgba(99, 120, 200, 0.05);
-  color: #4c5680;
-  border-color: rgba(99, 120, 200, 0.1);
+  background: rgba(57, 65, 90, 0.06);
+  color: #8b93a5;
 }
 .dusk-badge[data-status="PENDING"] {
-  background: rgba(251, 191, 36, 0.1);
-  color: #fbbf24;
-  border-color: rgba(251, 191, 36, 0.2);
+  background: rgba(234, 179, 8, 0.18);
+  color: #a16207;
 }
 .dusk-badge[data-status="REMOVED"] {
-  background: rgba(239, 68, 68, 0.1);
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(220, 76, 76, 0.15);
+  color: #b91c1c;
 }
 .dusk-badge[data-status="MANAGER"] {
-  background: rgba(129, 140, 248, 0.12);
-  color: #a5b4fc;
-  border-color: rgba(129, 140, 248, 0.25);
+  background: rgba(91, 99, 230, 0.15);
+  color: #4338ca;
 }
 .dusk-badge[data-status="MEMBER"] {
-  background: rgba(99, 120, 200, 0.1);
-  color: #94a3d4;
-  border-color: rgba(99, 120, 200, 0.2);
+  background: rgba(57, 65, 90, 0.1);
+  color: #475569;
 }
 .dusk-badge[data-status="ADMIN"] {
-  background: rgba(192, 132, 252, 0.12);
-  color: #d8b4fe;
-  border-color: rgba(192, 132, 252, 0.25);
+  background: rgba(147, 51, 234, 0.15);
+  color: #7e22ce;
 }
 
 /* ---- app shell --------------------------------------------------------------- */
 
-/* Re-runs the fade on every route change (the shell layout itself doesn't remount). */
 .dusk-page {
   animation: dusk-fade-in 0.2s ease-out;
 }
@@ -415,27 +441,31 @@ a:where([class~="underline"]):hover {
   color: var(--text-primary);
 }
 
-/* Ghost outline button — "Add task", "Save draft", pagination, etc. */
+/* Ghost / secondary button — raised soft-UI chip. */
 .dusk-ghost-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid var(--input-border);
-  border-radius: 8px;
-  color: var(--text-primary);
-  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  background: var(--nm-bg);
+  box-shadow: var(--nm-raised-sm);
   transition:
-    border-color 0.15s ease,
-    color 0.15s ease,
-    background-color 0.15s ease;
+    box-shadow 0.15s ease,
+    color 0.15s ease;
 }
 .dusk-ghost-btn:hover:not(:disabled) {
-  border-color: var(--border-active);
   color: var(--accent-light);
-  background: rgba(99, 120, 200, 0.08);
+  box-shadow: var(--nm-raised);
+}
+.dusk-ghost-btn:active:not(:disabled) {
+  color: var(--accent-light);
+  box-shadow: var(--nm-inset-sm);
 }
 .dusk-ghost-btn:disabled {
-  opacity: 0.45;
+  opacity: 0.5;
+  box-shadow: none;
 }
 
 /* Form section heading — top rule, accent text, icon slot. */
@@ -452,7 +482,7 @@ a:where([class~="underline"]):hover {
   letter-spacing: 0.05em;
 }
 
-/* ---- loading skeletons -------------------------------------------------------- */
+/* ---- loading skeletons ------------------------------------------------------ */
 
 @keyframes shimmer {
   from {
@@ -464,70 +494,49 @@ a:where([class~="underline"]):hover {
 }
 
 .dusk-skeleton {
-  border-radius: 8px;
-  background: linear-gradient(
-    90deg,
-    rgba(99, 120, 200, 0.05) 0%,
-    rgba(99, 120, 200, 0.12) 50%,
-    rgba(99, 120, 200, 0.05) 100%
-  );
+  border-radius: 10px;
+  background: linear-gradient(90deg, #dbe0e9 0%, #eef1f7 50%, #dbe0e9 100%);
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
+  box-shadow: var(--nm-inset-sm);
 }
 
-/* ---- sidebar / nav (no persistent nav shipped yet — ready for one) -------- */
+/* ---- sidebar / nav -------------------------------------------------------- */
 
 .dusk-sidebar {
-  background: var(--bg-sidebar);
-  border-right: 1px solid var(--border-subtle);
+  background: var(--nm-bg);
+  border-right: 1px solid transparent;
+  box-shadow:
+    inset -1px 0 0 rgba(57, 65, 90, 0.05),
+    8px 0 20px -14px rgba(57, 65, 90, 0.35);
 }
 
-/* Lightning CSS (Tailwind v4's bundler) drops bare `backdrop-filter` for the
-   default browser targets, so gate it behind @supports where it survives. */
-@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .dusk-panel,
-  :where(section, article, aside, header, form, fieldset, dl, ul, ol, li, div):where([class~="border"]):where(
-      [class~="border-black/10"],
-      [class~="border-black/15"],
-      [class~="border-black/20"],
-      [class~="border-white/10"],
-      [class~="border-white/15"],
-      [class~="border-white/20"],
-      [class~="border-white/25"]
-    ) {
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
-  }
-  .dusk-sidebar {
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
-  }
-}
 .dusk-nav-item {
   color: var(--text-secondary);
-  border-left: 2px solid transparent;
+  border-radius: 10px;
   transition: all 0.15s ease;
 }
 .dusk-nav-item:hover {
-  background: rgba(99, 120, 200, 0.1);
   color: var(--accent-light);
+  box-shadow: var(--nm-raised-sm);
 }
 .dusk-nav-item.is-active {
-  background: rgba(99, 120, 200, 0.18);
+  background: rgba(91, 99, 230, 0.09);
   color: var(--accent-light);
-  border-left-color: #6366f1;
+  box-shadow: var(--nm-inset-sm);
 }
 
 /* ---- recharts ----------------------------------------------------------- */
 
 .recharts-default-tooltip {
-  background: #1e2950 !important;
-  border: 1px solid rgba(99, 120, 200, 0.3) !important;
-  border-radius: 8px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(57, 65, 90, 0.1) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--nm-raised-sm) !important;
 }
 .recharts-tooltip-label,
 .recharts-tooltip-item {
-  color: #e0e7ff !important;
+  color: var(--text-primary) !important;
 }
 .recharts-cartesian-axis-tick-value {
   fill: var(--text-secondary);
@@ -536,5 +545,5 @@ a:where([class~="underline"]):hover {
   color: var(--text-secondary) !important;
 }
 .recharts-cartesian-grid line {
-  stroke: rgba(99, 120, 200, 0.15);
+  stroke: rgba(57, 65, 90, 0.08);
 }

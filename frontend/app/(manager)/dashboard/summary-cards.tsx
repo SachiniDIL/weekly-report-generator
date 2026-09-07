@@ -34,16 +34,23 @@ export function SummaryCards() {
       <MetricCard
         label="Submitted this week"
         value={summary.totalSubmittedThisWeek}
+        accent="#4f6ef7"
       />
       <MetricCard
         label="Compliance rate"
         value={`${Math.round(summary.complianceRate * 100)}%`}
+        accent="#2f9e5f"
       />
       <MetricCard
         label="Needs correction"
         value={summary.needsCorrectionCount}
+        accent="#e07b1a"
       />
-      <MetricCard label="Open blockers" value={summary.openBlockersCount} />
+      <MetricCard
+        label="Open blockers"
+        value={summary.openBlockersCount}
+        accent="#dc4c4c"
+      />
     </div>
   );
 }
@@ -51,12 +58,17 @@ export function SummaryCards() {
 function MetricCard({
   label,
   value,
+  accent,
 }: {
   label: string;
   value: string | number;
+  accent: string;
 }) {
   return (
-    <div className="dusk-panel p-4">
+    <div
+      className="dusk-panel p-4"
+      style={{ borderLeft: `3px solid ${accent}` }}
+    >
       <p className="text-xs uppercase tracking-wide text-dusk-secondary">
         {label}
       </p>

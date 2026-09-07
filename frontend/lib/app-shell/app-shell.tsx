@@ -132,12 +132,10 @@ function Topbar({
 }) {
   return (
     <header
-      className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-4 border-b px-8"
+      className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-4 px-8"
       style={{
-        borderColor: "var(--border-subtle)",
-        background: "rgba(13, 18, 41, 0.72)",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
+        background: "var(--nm-bg)",
+        boxShadow: "0 8px 18px -12px rgba(57, 65, 90, 0.4)",
       }}
     >
       <h1 className="truncate text-sm font-semibold text-dusk-primary">

@@ -17,7 +17,16 @@ export function ChartCard<Row>({
 }) {
   return (
     <section className="dusk-panel p-4">
-      <h2 className="mb-3 text-sm font-semibold text-dusk-primary">{title}</h2>
+      <h2
+        className="mb-3 text-sm font-semibold text-dusk-primary"
+        style={{
+          paddingBottom: "0.5rem",
+          borderBottom: "1px solid transparent",
+          borderImage: "linear-gradient(90deg, #6366f1, transparent) 1",
+        }}
+      >
+        {title}
+      </h2>
       {query.isPending ? (
         <div role="status" aria-label="Loading" className="flex flex-col gap-2">
           <Skeleton className="h-40 w-full" />

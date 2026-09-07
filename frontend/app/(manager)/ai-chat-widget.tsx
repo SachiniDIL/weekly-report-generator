@@ -14,8 +14,11 @@ export function AiChatWidget() {
       {open ? (
         <section
           aria-label="AI assistant"
-          className="flex h-[28rem] w-80 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl border border-white/15 bg-dusk-base shadow-2xl"
-          style={{ backdropFilter: "blur(16px)" }}
+          className="flex h-[28rem] w-80 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl border border-white/15 bg-dusk-base"
+          style={{
+            boxShadow:
+              "12px 12px 32px rgba(57, 65, 90, 0.35), -8px -8px 22px #ffffff",
+          }}
         >
           <header className="flex items-center justify-between border-b border-white/10 px-3 py-2">
             <h2 className="text-sm font-semibold text-dusk-primary">
@@ -44,8 +47,11 @@ export function AiChatWidget() {
         type="button"
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
-        className="rounded-full bg-foreground px-4 py-3 text-sm font-medium text-background shadow-lg"
-        style={{ boxShadow: "0 6px 24px rgba(99, 102, 241, 0.45)" }}
+        className="rounded-full bg-foreground px-4 py-3 text-sm font-medium text-background"
+        style={{
+          boxShadow:
+            "6px 6px 16px rgba(91, 99, 230, 0.4), -6px -6px 16px #ffffff",
+        }}
       >
         {open ? "Hide assistant" : "Ask AI"}
       </button>
