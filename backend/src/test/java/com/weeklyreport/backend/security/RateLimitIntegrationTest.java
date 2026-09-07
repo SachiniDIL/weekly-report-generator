@@ -12,7 +12,7 @@ import com.weeklyreport.backend.domain.Role;
 import com.weeklyreport.backend.domain.User;
 import com.weeklyreport.backend.domain.UserStatus;
 import com.weeklyreport.backend.repository.UserRepository;
-import com.weeklyreport.backend.service.BrevoEmailService;
+import com.weeklyreport.backend.service.EmailService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,7 +57,7 @@ class RateLimitIntegrationTest {
     private JwtService jwtService;
 
     @MockitoBean
-    private BrevoEmailService brevoEmailService;
+    private EmailService emailService;
 
     @BeforeEach
     @AfterEach

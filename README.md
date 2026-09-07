@@ -45,10 +45,23 @@ cd backend
 ### Backend
 
 Local runs use `backend/src/main/resources/application-local.properties`, which is
-**git-ignored** because it holds real secrets (JWT signing key, Brevo API key,
+**git-ignored** because it holds real secrets (JWT signing key, Gmail app password,
 Gemini API key, datasource credentials). Create it from the values described in
 `.env.example`. The base `application.properties` reads everything else from
 environment variables and is what production uses.
+
+Password-reset email is sent over Gmail SMTP. `application-local.properties` needs:
+
+```properties
+GMAIL_ADDRESS=your.email@gmail.com
+GMAIL_APP_PASSWORD=your 16-character app password
+```
+
+`GMAIL_APP_PASSWORD` is a Google **app password** (Account → Security → App
+passwords), not the account password. `spring.mail.host` / `port` and the SMTP
+auth/STARTTLS flags are already set in the base `application.properties`. If the
+credentials are missing or wrong the send fails silently and the
+`/auth/forgot-password` response is unchanged, by design.
 
 `server.port` is `${PORT:8080}` — it binds to the platform-assigned `$PORT` in
 production and falls back to `8080` locally.
@@ -164,7 +177,7 @@ the app already binds to it. Set these environment variables:
 | `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD` | database credentials                                                                  |
 | `JWT_SECRET`                                                | random string, at least 32 characters                                                 |
 | `FRONTEND_URL`                                              | **the production Vercel URL** (e.g. `https://your-app.vercel.app`)                    |
-| `BREVO_API_KEY` / `BREVO_SENDER_EMAIL`                      | transactional email (password reset)                                                  |
+| `GMAIL_ADDRESS` / `GMAIL_APP_PASSWORD`                      | Gmail SMTP for password-reset email; app password, not the account password           |
 | `GEMINI_API_KEY` / `GEMINI_MODEL`                           | AI assistant; use a current model id such as `gemini-3.6-flash` (AI Studio free tier) |
 | `RATE_LIMIT_ENABLED`                                        | optional; per-IP limiting on the `/auth` endpoints, on unless set to `false`          |
 

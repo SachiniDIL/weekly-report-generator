@@ -33,7 +33,7 @@ public class PasswordResetService {
     private final UserRepository userRepository;
     private final PasswordResetTokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
-    private final BrevoEmailService emailService;
+    private final EmailService emailService;
     private final Clock clock;
     private final String frontendUrl;
     private final SecureRandom secureRandom = new SecureRandom();
@@ -42,7 +42,7 @@ public class PasswordResetService {
             UserRepository userRepository,
             PasswordResetTokenRepository tokenRepository,
             PasswordEncoder passwordEncoder,
-            BrevoEmailService emailService,
+            EmailService emailService,
             Clock clock,
             @Value("${frontend.url}") String frontendUrl) {
         this.userRepository = userRepository;

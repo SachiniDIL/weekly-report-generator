@@ -20,7 +20,7 @@ import com.weeklyreport.backend.domain.UserStatus;
 import com.weeklyreport.backend.repository.PasswordResetTokenRepository;
 import com.weeklyreport.backend.repository.UserRepository;
 import com.weeklyreport.backend.security.JwtService;
-import com.weeklyreport.backend.service.BrevoEmailService;
+import com.weeklyreport.backend.service.EmailService;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -66,7 +66,7 @@ class PasswordResetEndpointsIntegrationTest {
     private JwtService jwtService;
 
     @MockitoBean
-    private BrevoEmailService brevoEmailService;
+    private EmailService emailService;
 
     @MockitoBean
     private Clock clock;
@@ -89,8 +89,8 @@ class PasswordResetEndpointsIntegrationTest {
         String knownResponse = forgotPassword("real@example.com");
 
         assertThat(knownResponse).isEqualTo(unknownResponse);
-        verify(brevoEmailService, never()).sendPasswordResetEmail(eq("nobody@example.com"), anyString());
-        verify(brevoEmailService).sendPasswordResetEmail(eq("real@example.com"), anyString());
+        verify(emailService, never()).sendPasswordResetEmail(eq("nobody@example.com"), anyString());
+        verify(emailService).sendPasswordResetEmail(eq("real@example.com"), anyString());
         assertThat(tokenRepository.count()).isEqualTo(1);
     }
 
@@ -158,7 +158,7 @@ class PasswordResetEndpointsIntegrationTest {
         forgotPassword("rapid@example.com");
 
         assertThat(tokenRepository.count()).isEqualTo(1);
-        verify(brevoEmailService, times(1)).sendPasswordResetEmail(eq("rapid@example.com"), anyString());
+        verify(emailService, times(1)).sendPasswordResetEmail(eq("rapid@example.com"), anyString());
     }
 
     private User persistActiveUser(String email) {
@@ -203,7 +203,7 @@ class PasswordResetEndpointsIntegrationTest {
 
     private List<String> resetLinks() {
         ArgumentCaptor<String> linkCaptor = ArgumentCaptor.forClass(String.class);
-        verify(brevoEmailService, atLeastOnce()).sendPasswordResetEmail(any(), linkCaptor.capture());
+        verify(emailService, atLeastOnce()).sendPasswordResetEmail(any(), linkCaptor.capture());
         return linkCaptor.getAllValues();
     }
 
