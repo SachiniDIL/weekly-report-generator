@@ -13,12 +13,12 @@ export default function ReportHistoryPage() {
   const query = useMyReportsQuery(page);
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-6 p-6">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">My reports</h1>
+        <h1 className="text-xl font-semibold text-dusk-primary">My reports</h1>
         <Link
           href="/reports/new"
-          className="rounded bg-foreground px-4 py-2 text-sm font-medium text-background"
+          className="rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background"
         >
           Create new report
         </Link>
@@ -30,7 +30,7 @@ export default function ReportHistoryPage() {
       ) : null}
 
       {query.isSuccess && query.data.empty ? (
-        <p className="rounded border border-dashed border-black/20 p-6 text-center text-sm text-gray-500 dark:border-white/25">
+        <p className="rounded-xl border border-dashed border-white/20 p-6 text-center text-sm text-dusk-secondary">
           You haven&apos;t written any reports yet. Start with &ldquo;Create new
           report&rdquo;.
         </p>

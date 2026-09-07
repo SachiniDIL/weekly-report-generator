@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ApiError, describeError } from "@/lib/api-client";
+import { AuthHeader } from "../auth-header";
 import { TextField } from "../text-field";
 import { useRegisterMutation } from "./use-register-mutation";
 import {
@@ -11,7 +12,12 @@ import {
   type RegistrationForm,
 } from "./validate-registration";
 
-const EMPTY_FORM: RegistrationForm = { name: "", email: "", password: "", confirmPassword: "" };
+const EMPTY_FORM: RegistrationForm = {
+  name: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+};
 
 export default function RegisterPage() {
   const mutation = useRegisterMutation();
@@ -19,7 +25,9 @@ export default function RegisterPage() {
   const [clientErrors, setClientErrors] = useState<RegistrationErrors>({});
 
   const serverFieldErrors =
-    mutation.error instanceof ApiError ? (mutation.error.fieldErrors ?? {}) : {};
+    mutation.error instanceof ApiError
+      ? (mutation.error.fieldErrors ?? {})
+      : {};
   const hasServerFieldErrors = Object.keys(serverFieldErrors).length > 0;
 
   function fieldError(field: keyof RegistrationForm): string | undefined {
@@ -42,14 +50,18 @@ export default function RegisterPage() {
     const nextErrors = validateRegistration(form);
     setClientErrors(nextErrors);
     if (Object.keys(nextErrors).length === 0) {
-      mutation.mutate({ name: form.name, email: form.email, password: form.password });
+      mutation.mutate({
+        name: form.name,
+        email: form.email,
+        password: form.password,
+      });
     }
   }
 
   if (mutation.isSuccess) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-xl font-semibold">Registration submitted</h1>
+        <AuthHeader title="Registration submitted" />
         <p
           role="status"
           className="rounded bg-green-50 px-3 py-2 text-sm text-green-800 dark:bg-green-950 dark:text-green-300"
@@ -65,7 +77,7 @@ export default function RegisterPage() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">Create an account</h1>
+      <AuthHeader title="Create an account" />
 
       {mutation.isError && !hasServerFieldErrors ? (
         <p

@@ -1,5 +1,6 @@
 "use client";
 
+import { BackLink } from "@/lib/back-link";
 import { ReportMessage } from "@/lib/reports/report-message";
 import { useProjectOptionsQuery } from "@/lib/reports/use-project-options-query";
 import { emptyReportContentForm } from "../report-content-form";
@@ -20,8 +21,11 @@ export default function NewReportPage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <h1 className="mb-6 text-xl font-semibold">New weekly report</h1>
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+      <BackLink href="/reports" label="My Reports" />
+      <h1 className="text-xl font-semibold text-dusk-primary">
+        New weekly report
+      </h1>
       <ReportEditorForm
         reportId={null}
         identity={{ mode: "create", projects: projects.data }}

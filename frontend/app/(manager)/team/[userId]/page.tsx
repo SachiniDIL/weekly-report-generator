@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { ApiError, describeError } from "@/lib/api-client";
+import { BackLink } from "@/lib/back-link";
 import { useMemberProfileQuery } from "@/lib/dashboard/dashboard-queries";
 import { ReportMessage } from "@/lib/reports/report-message";
 import { MemberProfileStats } from "./member-profile-stats";
@@ -36,7 +37,8 @@ export default function TeamMemberProfilePage() {
   }
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-8 p-6">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+      <BackLink href="/team" label="Team" />
       <MemberProfileStats profile={profile.data} />
       <MemberReportHistory userId={userId} />
     </main>

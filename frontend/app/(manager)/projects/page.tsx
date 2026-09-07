@@ -13,7 +13,7 @@ export default function ProjectsPage() {
   const projects = useProjectsQuery(showArchived);
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-6 p-6">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold text-dusk-primary">Projects</h1>
         <button

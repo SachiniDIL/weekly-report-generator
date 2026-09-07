@@ -24,7 +24,15 @@ import { useReportContentForm } from "./use-report-content-form";
 
 type IdentityProps =
   | { mode: "create"; projects: ProjectResponse[] }
-  | { mode: "existing"; projectName: string; weekStart: string; weekEnd: string };
+  | {
+      mode: "existing";
+      projectName: string;
+      weekStart: string;
+      weekEnd: string;
+    };
+
+const FIELD_LABEL =
+  "text-xs font-medium uppercase tracking-wide text-dusk-secondary";
 
 export function ReportEditorForm({
   reportId,
@@ -60,7 +68,10 @@ export function ReportEditorForm({
   }
 
   function passesValidation(): boolean {
-    const found = validateReportContentForm(content.form, isCreate ? draftIdentity : undefined);
+    const found = validateReportContentForm(
+      content.form,
+      isCreate ? draftIdentity : undefined,
+    );
     setProblems(found);
     return found.length === 0;
   }
@@ -79,7 +90,10 @@ export function ReportEditorForm({
   }
 
   return (
-    <form className="flex flex-col gap-6" onSubmit={(event) => event.preventDefault()}>
+    <form
+      className="dusk-panel flex flex-col gap-6 p-6"
+      onSubmit={(event) => event.preventDefault()}
+    >
       {identity.mode === "create" ? (
         <CreateIdentityFields
           projects={identity.projects}
@@ -94,24 +108,27 @@ export function ReportEditorForm({
         />
       )}
 
-      <TextArea
-        id="report-tasks-planned-next"
-        label="Planned for next week"
-        value={content.form.tasksPlannedNext}
-        onChange={(value) => content.setText("tasksPlannedNext", value)}
-      />
-      <TextArea
-        id="report-notes"
-        label="Notes"
-        value={content.form.notes}
-        onChange={(value) => content.setText("notes", value)}
-      />
-      <Field
-        id="report-links"
-        label="Links"
-        value={content.form.links}
-        onChange={(value) => content.setText("links", value)}
-      />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <TextArea
+          id="report-tasks-planned-next"
+          label="Planned for next week"
+          className="sm:col-span-2"
+          value={content.form.tasksPlannedNext}
+          onChange={(value) => content.setText("tasksPlannedNext", value)}
+        />
+        <TextArea
+          id="report-notes"
+          label="Notes"
+          value={content.form.notes}
+          onChange={(value) => content.setText("notes", value)}
+        />
+        <Field
+          id="report-links"
+          label="Links"
+          value={content.form.links}
+          onChange={(value) => content.setText("links", value)}
+        />
+      </div>
 
       <TaskEntriesFieldset controls={content.taskEntries} />
       <BlockersFieldset controls={content.blockers} />
@@ -119,7 +136,10 @@ export function ReportEditorForm({
       <HoursFieldset controls={content.hours} />
 
       {problems.length > 0 ? (
-        <ul role="alert" className="rounded bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+        <ul
+          role="alert"
+          className="dusk-banner-error flex flex-col gap-1 p-3 text-sm"
+        >
           {problems.map((problem) => (
             <li key={problem}>{problem}</li>
           ))}
@@ -127,13 +147,13 @@ export function ReportEditorForm({
       ) : null}
 
       {serverError ? (
-        <p role="alert" className="rounded bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+        <p role="alert" className="dusk-banner-error p-3 text-sm">
           {describeError(serverError)}
         </p>
       ) : null}
 
       {saveDraft.isSuccess && reportId != null ? (
-        <p role="status" className="text-sm text-green-700 dark:text-green-400">
+        <p role="status" className="dusk-banner-success p-3 text-sm">
           Draft saved.
         </p>
       ) : null}
@@ -143,7 +163,7 @@ export function ReportEditorForm({
           type="button"
           onClick={handleSaveDraft}
           disabled={pending}
-          className="rounded border border-black/20 px-4 py-2 text-sm font-medium disabled:opacity-60 dark:border-white/25"
+          className="dusk-ghost-btn px-4 py-2 text-sm font-medium"
         >
           {saveDraft.isPending ? "Saving…" : "Save draft"}
         </button>
@@ -151,7 +171,7 @@ export function ReportEditorForm({
           type="button"
           onClick={() => setConfirmingSubmit(true)}
           disabled={pending}
-          className="rounded bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-60"
+          className="rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-60"
         >
           Submit for review
         </button>
@@ -162,24 +182,24 @@ export function ReportEditorForm({
           role="dialog"
           aria-modal="true"
           aria-label="Confirm submit"
-          className="rounded border border-black/20 p-4 text-sm dark:border-white/25"
+          className="rounded-xl border border-white/20 p-4 text-sm text-dusk-primary"
         >
           <p>
-            Once submitted, a manager reviews this report and you can&apos;t edit it until they
-            respond. Submit now?
+            Once submitted, a manager reviews this report and you can&apos;t
+            edit it until they respond. Submit now?
           </p>
           <div className="mt-3 flex gap-3">
             <button
               type="button"
               onClick={() => setConfirmingSubmit(false)}
-              className="rounded border border-black/20 px-3 py-1.5 dark:border-white/25"
+              className="dusk-ghost-btn px-3 py-1.5"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleConfirmSubmit}
-              className="rounded bg-foreground px-3 py-1.5 font-medium text-background"
+              className="rounded-lg bg-foreground px-3 py-1.5 font-medium text-background"
             >
               {submit.isPending ? "Submitting…" : "Yes, submit"}
             </button>
@@ -200,18 +220,21 @@ function CreateIdentityFields({
   onChange: (next: ReportIdentityDraft) => void;
 }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
-      <div className="flex flex-col gap-1">
-        <label htmlFor="report-project" className="text-sm font-medium">
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div className="flex flex-col gap-1 sm:col-span-2">
+        <label htmlFor="report-project" className={FIELD_LABEL}>
           Project
         </label>
         <select
           id="report-project"
           value={value.projectId ?? ""}
           onChange={(event) =>
-            onChange({ ...value, projectId: event.target.value ? Number(event.target.value) : null })
+            onChange({
+              ...value,
+              projectId: event.target.value ? Number(event.target.value) : null,
+            })
           }
-          className="rounded border border-black/15 bg-transparent px-3 py-2 text-sm dark:border-white/20"
+          className="px-3 py-2 text-sm"
         >
           <option value="">Select a project</option>
           {projects.map((project) => (
@@ -247,20 +270,20 @@ function ReadOnlyIdentity({
   weekEnd: string;
 }) {
   return (
-    <dl className="grid gap-2 text-sm sm:grid-cols-3">
-      <div>
-        <dt className="text-gray-500">Project</dt>
-        <dd>{projectName}</dd>
-      </div>
-      <div>
-        <dt className="text-gray-500">Week start</dt>
-        <dd>{weekStart}</dd>
-      </div>
-      <div>
-        <dt className="text-gray-500">Week end</dt>
-        <dd>{weekEnd}</dd>
-      </div>
+    <dl className="grid gap-3 text-sm sm:grid-cols-3">
+      <IdentityFact label="Project" value={projectName} />
+      <IdentityFact label="Week start" value={weekStart} />
+      <IdentityFact label="Week end" value={weekEnd} />
     </dl>
+  );
+}
+
+function IdentityFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <dt className={FIELD_LABEL}>{label}</dt>
+      <dd className="text-dusk-primary">{value}</dd>
+    </div>
   );
 }
 
@@ -269,22 +292,24 @@ function Field({
   label,
   value,
   onChange,
+  className = "",
 }: {
   id: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
+  className?: string;
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-sm font-medium">
+    <div className={`flex flex-col gap-1 ${className}`}>
+      <label htmlFor={id} className={FIELD_LABEL}>
         {label}
       </label>
       <input
         id={id}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="rounded border border-black/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/40 dark:border-white/20"
+        className="px-3 py-2 text-sm"
       />
     </div>
   );
@@ -303,7 +328,7 @@ function DateField({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className={FIELD_LABEL}>
         {label}
       </label>
       <input
@@ -311,7 +336,7 @@ function DateField({
         type="date"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="rounded border border-black/15 bg-transparent px-3 py-2 text-sm dark:border-white/20"
+        className="px-3 py-2 text-sm"
       />
     </div>
   );
@@ -322,15 +347,17 @@ function TextArea({
   label,
   value,
   onChange,
+  className = "",
 }: {
   id: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
+  className?: string;
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-sm font-medium">
+    <div className={`flex flex-col gap-1 ${className}`}>
+      <label htmlFor={id} className={FIELD_LABEL}>
         {label}
       </label>
       <textarea
@@ -338,7 +365,7 @@ function TextArea({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         rows={3}
-        className="rounded border border-black/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/40 dark:border-white/20"
+        className="px-3 py-2 text-sm"
       />
     </div>
   );

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { describeError } from "@/lib/api-client";
+import { AuthHeader } from "../auth-header";
 import { TextField } from "../text-field";
 import { useLoginMutation } from "./use-login-mutation";
 import {
@@ -38,7 +39,7 @@ export default function LoginPage() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">Sign in</h1>
+      <AuthHeader title="Sign in" />
 
       {mutation.isError ? (
         <p

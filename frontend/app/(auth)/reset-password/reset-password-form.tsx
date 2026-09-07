@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { describeError } from "@/lib/api-client";
+import { AuthHeader } from "../auth-header";
 import { TextField } from "../text-field";
 import { useResetPasswordMutation } from "./use-reset-password-mutation";
 import {
@@ -12,7 +13,10 @@ import {
   type PasswordResetFields,
 } from "./validate-new-password";
 
-const EMPTY_FIELDS: PasswordResetFields = { newPassword: "", confirmPassword: "" };
+const EMPTY_FIELDS: PasswordResetFields = {
+  newPassword: "",
+  confirmPassword: "",
+};
 
 export function ResetPasswordForm() {
   const token = useSearchParams().get("token");
@@ -20,7 +24,7 @@ export function ResetPasswordForm() {
   if (!token) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-xl font-semibold">Invalid reset link</h1>
+        <AuthHeader title="Invalid reset link" />
         <p className="text-sm text-black/60 dark:text-white/60">
           Open the link from your password reset email, or request a new one.
         </p>
@@ -62,7 +66,7 @@ function NewPasswordForm({ token }: { token: string }) {
   if (mutation.isSuccess) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-xl font-semibold">Password reset</h1>
+        <AuthHeader title="Password reset" />
         <p
           role="status"
           className="rounded bg-green-50 px-3 py-2 text-sm text-green-800 dark:bg-green-950 dark:text-green-300"
@@ -78,7 +82,7 @@ function NewPasswordForm({ token }: { token: string }) {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">Choose a new password</h1>
+      <AuthHeader title="Choose a new password" />
 
       {mutation.isError ? (
         <p

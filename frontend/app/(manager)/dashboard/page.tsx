@@ -15,7 +15,7 @@ export default function ManagerDashboardPage() {
   const [tab, setTab] = useState<DashboardTab>("overview");
 
   return (
-    <main className="mx-auto flex max-w-5xl flex-col gap-6 p-6">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <h1 className="text-xl font-semibold text-dusk-primary">
         Team dashboard
       </h1>

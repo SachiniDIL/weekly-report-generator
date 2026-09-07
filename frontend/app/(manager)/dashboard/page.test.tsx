@@ -9,14 +9,25 @@ import ManagerDashboardPage from "./page";
 const replaceMock = jest.fn();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), replace: replaceMock }),
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: replaceMock,
+    prefetch: jest.fn(),
+  }),
+  usePathname: () => "/dashboard",
 }));
 
 jest.mock("recharts", () => {
   function ResponsiveContainer({ children }: { children?: ReactNode }) {
     return <>{children}</>;
   }
-  function BarChart({ children, data }: { children?: ReactNode; data?: unknown[] }) {
+  function BarChart({
+    children,
+    data,
+  }: {
+    children?: ReactNode;
+    data?: unknown[];
+  }) {
     return (
       <div data-testid="bar-chart" data-count={data?.length ?? 0}>
         {children}
@@ -52,7 +63,11 @@ jest.mock("recharts", () => {
 });
 
 function json(body: unknown): Response {
-  return { ok: true, status: 200, json: async () => body } as unknown as Response;
+  return {
+    ok: true,
+    status: 200,
+    json: async () => body,
+  } as unknown as Response;
 }
 
 const SUMMARY = {
@@ -94,10 +109,14 @@ function dashboardBackend() {
   return jest.fn(async (rawUrl: string) => {
     const { pathname } = new URL(rawUrl);
     if (pathname === "/dashboard/summary") return json(SUMMARY);
-    if (pathname === "/dashboard/charts/tasks-completed-trend") return json(TREND);
-    if (pathname === "/dashboard/charts/submission-status-by-member") return json(SUBMISSION_STATUS);
-    if (pathname === "/dashboard/charts/workload-by-project") return json(WORKLOAD);
-    if (pathname === "/dashboard/charts/time-by-task-type") return json(TIME_BY_TYPE);
+    if (pathname === "/dashboard/charts/tasks-completed-trend")
+      return json(TREND);
+    if (pathname === "/dashboard/charts/submission-status-by-member")
+      return json(SUBMISSION_STATUS);
+    if (pathname === "/dashboard/charts/workload-by-project")
+      return json(WORKLOAD);
+    if (pathname === "/dashboard/charts/time-by-task-type")
+      return json(TIME_BY_TYPE);
     if (pathname === "/dashboard/section") return json(SECTION_VIEW);
     throw new Error(`unexpected request: ${pathname}`);
   });
@@ -136,7 +155,9 @@ describe("ManagerDashboardPage", () => {
     expect(screen.getByText("Workload by project")).toBeInTheDocument();
     expect(screen.getByText("Time by task type")).toBeInTheDocument();
 
-    await waitFor(() => expect(screen.getAllByTestId("bar-chart")).toHaveLength(2));
+    await waitFor(() =>
+      expect(screen.getAllByTestId("bar-chart")).toHaveLength(2),
+    );
     const barCharts = screen.getAllByTestId("bar-chart");
     expect(barCharts[0]).toHaveAttribute("data-count", String(TREND.length));
     expect(barCharts[1]).toHaveAttribute("data-count", String(WORKLOAD.length));
@@ -158,8 +179,12 @@ describe("ManagerDashboardPage", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Section comparison" }));
 
-    expect(await screen.findByText("Blocked on staging credentials")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Blockers" })).toBeInTheDocument();
+    expect(
+      await screen.findByText("Blocked on staging credentials"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Blockers" }),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Submitted this week")).not.toBeInTheDocument();
   });
 

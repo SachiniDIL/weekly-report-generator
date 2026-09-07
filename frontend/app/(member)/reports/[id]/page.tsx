@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { describeError } from "@/lib/api-client";
+import { BackLink } from "@/lib/back-link";
 import { CorrectionNotice } from "@/lib/reports/correction-notice";
 import { findCorrectionComment } from "@/lib/reports/find-correction-comment";
 import { isReportInaccessible } from "@/lib/reports/report-access";
@@ -45,7 +46,8 @@ export default function EditReportPage() {
 
   if (!EDITABLE_STATUSES.includes(data.status)) {
     return (
-      <main className="mx-auto max-w-3xl p-6">
+      <main className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+        <BackLink href="/reports" label="My Reports" />
         <ReportContentView report={data} />
       </main>
     );
@@ -57,14 +59,13 @@ export default function EditReportPage() {
       : null;
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <h1 className="mb-6 text-xl font-semibold">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+      <BackLink href="/reports" label="My Reports" />
+      <h1 className="text-xl font-semibold text-dusk-primary">
         {data.projectName} — week of {data.weekStart}
       </h1>
       {correctionComment ? (
-        <div className="mb-6">
-          <CorrectionNotice comment={correctionComment} />
-        </div>
+        <CorrectionNotice comment={correctionComment} />
       ) : null}
       <ReportEditorForm
         reportId={data.id}

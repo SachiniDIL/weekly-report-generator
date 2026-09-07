@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { describeError } from "@/lib/api-client";
+import { BackButton } from "@/lib/back-link";
 import { isReportInaccessible } from "@/lib/reports/report-access";
 import { ReportContentView } from "@/lib/reports/report-content-view";
 import { ReportMessage } from "@/lib/reports/report-message";
@@ -40,7 +41,8 @@ export default function ReviewReportPage() {
   const priorVersions = (history.data ?? []).slice(1);
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-8 p-6">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+      <BackButton />
       <ReportContentView report={data} />
 
       {awaitingReview ? (

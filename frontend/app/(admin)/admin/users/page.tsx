@@ -11,7 +11,7 @@ export default function AdminUsersPage() {
   const users = useAdminUsersQuery();
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-8 p-6">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-8">
       <h1 className="text-xl font-semibold text-dusk-primary">
         User management
       </h1>
