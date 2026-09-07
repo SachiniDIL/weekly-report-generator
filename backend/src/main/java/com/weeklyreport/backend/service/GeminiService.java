@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 /**
  * Calls Gemini's {@code generateContent} endpoint with a single prompt. Any transport failure or
@@ -46,6 +47,9 @@ public class GeminiService {
                 log.warn("Gemini returned no usable text: {}", response);
                 return UNAVAILABLE_MESSAGE;
             });
+        } catch (RestClientResponseException e) {
+            log.error("Gemini call failed with HTTP {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            return UNAVAILABLE_MESSAGE;
         } catch (RestClientException e) {
             log.error("Gemini call failed", e);
             return UNAVAILABLE_MESSAGE;
@@ -64,11 +68,19 @@ public class GeminiService {
         return text == null || text.isBlank() ? Optional.empty() : Optional.of(text);
     }
 
-    record GenerateContentRequest(List<Content> contents) {
+    record GenerateContentRequest(List<Content> contents, GenerationConfig generationConfig) {
         static GenerateContentRequest of(String prompt) {
-            return new GenerateContentRequest(List.of(new Content(List.of(new Part(prompt)))));
+            return new GenerateContentRequest(
+                    List.of(new Content(List.of(new Part(prompt)))),
+                    // Keep reasoning shallow — a reporting assistant doesn't need deep chains of
+                    // thought, and "low" cuts response time from ~30-40s to a few seconds.
+                    new GenerationConfig(new ThinkingConfig("LOW")));
         }
     }
+
+    record GenerationConfig(ThinkingConfig thinkingConfig) {}
+
+    record ThinkingConfig(String thinkingLevel) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     record GenerateContentResponse(List<Candidate> candidates) {}

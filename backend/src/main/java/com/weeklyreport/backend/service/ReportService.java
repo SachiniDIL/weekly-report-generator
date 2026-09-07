@@ -137,6 +137,10 @@ public class ReportService {
         blockerRepository.deleteByReportVersionId(versionId);
         achievementRepository.deleteByReportVersionId(versionId);
         hoursBreakdownRepository.deleteByReportVersionId(versionId);
+        // Push the deletes to the DB before the inserts below. Hibernate flushes inserts before
+        // deletes within a single flush, so without this a re-saved key blocker/achievement
+        // collides with the still-present old row on the one-key-per-version partial unique index.
+        reportVersionRepository.flush();
 
         version.setTasksPlannedNext(content.tasksPlannedNext());
         version.setNotes(content.notes());

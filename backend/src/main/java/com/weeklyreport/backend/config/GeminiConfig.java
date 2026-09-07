@@ -18,15 +18,15 @@ public class GeminiConfig {
     private static final String BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
 
-    // A hung request should fail the chat UI rather than block it indefinitely; Flash responses
-    // still take a few seconds under load, so the read timeout is generous.
-    private static final Duration READ_TIMEOUT = Duration.ofSeconds(20);
-
     @Bean
-    RestClient geminiRestClient(@Value("${gemini.api-key}") String apiKey) {
+    RestClient geminiRestClient(
+            @Value("${gemini.api-key}") String apiKey,
+            // Current Gemini "flash" models reason before answering and a real prompt can take
+            // 20-40s; the read timeout has to clear that or every call fails.
+            @Value("${gemini.timeout-seconds:60}") long timeoutSeconds) {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(CONNECT_TIMEOUT);
-        requestFactory.setReadTimeout(READ_TIMEOUT);
+        requestFactory.setReadTimeout(Duration.ofSeconds(timeoutSeconds));
 
         return RestClient.builder()
                 .baseUrl(BASE_URL)

@@ -235,6 +235,47 @@ class ReportEndpointsIntegrationTest {
                 .andExpect(jsonPath("$.message").isNotEmpty());
     }
 
+    @Test
+    void reSavingAVersionThatAlreadyHasAKeyBlockerAndAchievementSucceeds() throws Exception {
+        User owner = persistUser("Member", "member@example.com", Role.MEMBER);
+        Project project = persistProject();
+
+        String bodyWithKeyItems =
+                """
+                {"blockers": [{"description": "%s", "isKeyIssue": true}],
+                 "achievements": [{"description": "%s", "isKeyHighlight": true}]}
+                """;
+
+        String createResponse = mockMvc.perform(post("/reports")
+                        .header("Authorization", bearer(owner))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                """
+                                {"projectId": %d, "weekStart": "2026-09-01", "weekEnd": "2026-09-05",
+                                 "content": %s}
+                                """
+                                        .formatted(
+                                                project.getId(),
+                                                bodyWithKeyItems.formatted("Blocked on infra", "Shipped v1"))))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        long reportId = ((Number) JsonPath.read(createResponse, "$.id")).longValue();
+
+        // Editing the same version, still with one key blocker and one key achievement, must not
+        // collide with the rows already there — the replace deletes them first.
+        mockMvc.perform(put("/reports/" + reportId)
+                        .header("Authorization", bearer(owner))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bodyWithKeyItems.formatted("Still blocked on infra", "Shipped v1.1")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.blockers", hasSize(1)))
+                .andExpect(jsonPath("$.content.blockers[0].description").value("Still blocked on infra"))
+                .andExpect(jsonPath("$.content.blockers[0].isKeyIssue").value(true))
+                .andExpect(jsonPath("$.content.achievements[0].isKeyHighlight").value(true));
+    }
+
     private long createDraftReport(User owner) throws Exception {
         Project project = persistProject();
         String createBody = """

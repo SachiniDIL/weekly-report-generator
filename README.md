@@ -157,15 +157,15 @@ is deploy-ready; configuration is done in each dashboard.
 Deploy `backend/` using its `Dockerfile`. Render injects `$PORT` at runtime and
 the app already binds to it. Set these environment variables:
 
-| Variable                                                    | Notes                                                                           |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `SPRING_PROFILES_ACTIVE`                                    | leave unset normally; set to `seed` for one boot to load demo data, then remove |
-| `SPRING_DATASOURCE_URL`                                     | Render PostgreSQL connection string                                             |
-| `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD` | database credentials                                                            |
-| `JWT_SECRET`                                                | random string, at least 32 characters                                           |
-| `FRONTEND_URL`                                              | **the production Vercel URL** (e.g. `https://your-app.vercel.app`)              |
-| `BREVO_API_KEY` / `BREVO_SENDER_EMAIL`                      | transactional email (password reset)                                            |
-| `GEMINI_API_KEY` / `GEMINI_MODEL`                           | AI assistant (`gemini-2.0-flash` on the AI Studio free tier)                    |
+| Variable                                                    | Notes                                                                                 |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `SPRING_PROFILES_ACTIVE`                                    | leave unset normally; set to `seed` for one boot to load demo data, then remove       |
+| `SPRING_DATASOURCE_URL`                                     | Render PostgreSQL connection string                                                   |
+| `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD` | database credentials                                                                  |
+| `JWT_SECRET`                                                | random string, at least 32 characters                                                 |
+| `FRONTEND_URL`                                              | **the production Vercel URL** (e.g. `https://your-app.vercel.app`)                    |
+| `BREVO_API_KEY` / `BREVO_SENDER_EMAIL`                      | transactional email (password reset)                                                  |
+| `GEMINI_API_KEY` / `GEMINI_MODEL`                           | AI assistant; use a current model id such as `gemini-3.6-flash` (AI Studio free tier) |
 
 **CORS:** the backend allows exactly one origin, taken from `FRONTEND_URL` — the
 same variable used to build password-reset links. Setting `FRONTEND_URL` to the
