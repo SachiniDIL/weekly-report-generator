@@ -14,20 +14,25 @@ export default function TeamMemberProfilePage() {
 
   const isUnknownMember =
     !Number.isFinite(userId) ||
-    (profile.isError && profile.error instanceof ApiError && profile.error.status === 404);
+    (profile.isError &&
+      profile.error instanceof ApiError &&
+      profile.error.status === 404);
 
   if (isUnknownMember) {
     return (
       <ReportMessage>
-        This team member was not found. They may have been removed, or the id is not a team member.
+        This team member was not found. They may have been removed, or the id is
+        not a team member.
       </ReportMessage>
     );
   }
   if (profile.isError) {
-    return <ReportMessage tone="error">{describeError(profile.error)}</ReportMessage>;
+    return (
+      <ReportMessage tone="error">{describeError(profile.error)}</ReportMessage>
+    );
   }
   if (profile.isPending) {
-    return <ReportMessage>Loading team member…</ReportMessage>;
+    return <ReportMessage tone="loading" />;
   }
 
   return (

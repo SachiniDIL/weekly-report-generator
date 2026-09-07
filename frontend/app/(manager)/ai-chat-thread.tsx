@@ -12,11 +12,14 @@ export function AiChatThread({
   const isEmpty = messages.length === 0 && !isSending && error === null;
 
   return (
-    <div className="flex-1 overflow-y-auto px-3 py-2 text-sm" aria-live="polite">
+    <div
+      className="flex-1 overflow-y-auto px-3 py-2 text-sm"
+      aria-live="polite"
+    >
       {isEmpty ? (
-        <p className="text-gray-500">
-          Ask a question about your team&apos;s reports — for example, &ldquo;Who is blocked this
-          week?&rdquo;
+        <p className="text-dusk-secondary">
+          Ask a question about your team&apos;s reports — for example,
+          &ldquo;Who is blocked this week?&rdquo;
         </p>
       ) : null}
 
@@ -26,8 +29,8 @@ export function AiChatThread({
             key={message.id}
             className={
               message.role === "user"
-                ? "self-end rounded bg-foreground px-2 py-1 text-background"
-                : "self-start rounded bg-black/[.05] px-2 py-1 whitespace-pre-wrap dark:bg-white/[.08]"
+                ? "max-w-[85%] self-end rounded-lg bg-foreground px-2.5 py-1.5 text-background"
+                : "max-w-[85%] self-start whitespace-pre-wrap rounded-lg border border-white/10 bg-white/[.04] px-2.5 py-1.5 text-dusk-primary"
             }
           >
             {message.text}
@@ -35,9 +38,18 @@ export function AiChatThread({
         ))}
       </ul>
 
-      {isSending ? <p className="mt-2 text-gray-500">Thinking…</p> : null}
+      {isSending ? (
+        <div
+          className="mt-2 flex flex-col gap-1.5"
+          role="status"
+          aria-label="Thinking"
+        >
+          <div className="dusk-skeleton h-3 w-24" />
+          <div className="dusk-skeleton h-3 w-40" />
+        </div>
+      ) : null}
       {error ? (
-        <p role="alert" className="mt-2 text-red-700 dark:text-red-300">
+        <p role="alert" className="mt-2 text-red-700">
           {error}
         </p>
       ) : null}

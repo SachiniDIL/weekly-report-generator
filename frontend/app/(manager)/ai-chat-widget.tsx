@@ -14,21 +14,28 @@ export function AiChatWidget() {
       {open ? (
         <section
           aria-label="AI assistant"
-          className="flex h-[28rem] w-80 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-lg border border-black/15 bg-background shadow-xl dark:border-white/20"
+          className="flex h-[28rem] w-80 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl border border-white/15 bg-dusk-base shadow-2xl"
+          style={{ backdropFilter: "blur(16px)" }}
         >
-          <header className="flex items-center justify-between border-b border-black/10 px-3 py-2 dark:border-white/15">
-            <h2 className="text-sm font-semibold">Ask about your team</h2>
+          <header className="flex items-center justify-between border-b border-white/10 px-3 py-2">
+            <h2 className="text-sm font-semibold text-dusk-primary">
+              Ask about your team
+            </h2>
             <button
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Close assistant"
-              className="text-gray-500 hover:text-foreground"
+              className="text-dusk-secondary hover:text-dusk-accent-light"
             >
               ✕
             </button>
           </header>
 
-          <AiChatThread messages={chat.messages} isSending={chat.isSending} error={chat.error} />
+          <AiChatThread
+            messages={chat.messages}
+            isSending={chat.isSending}
+            error={chat.error}
+          />
           <AiChatComposer onSend={chat.send} disabled={chat.isSending} />
         </section>
       ) : null}
@@ -38,6 +45,7 @@ export function AiChatWidget() {
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
         className="rounded-full bg-foreground px-4 py-3 text-sm font-medium text-background shadow-lg"
+        style={{ boxShadow: "0 6px 24px rgba(99, 102, 241, 0.45)" }}
       >
         {open ? "Hide assistant" : "Ask AI"}
       </button>

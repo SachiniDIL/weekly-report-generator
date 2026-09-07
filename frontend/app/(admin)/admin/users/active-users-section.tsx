@@ -3,18 +3,24 @@
 import { describeError } from "@/lib/api-client";
 import type { Role } from "@/lib/api-client";
 import type { AdminUserView } from "@/lib/api/admin-users";
-import { useChangeUserRoleMutation, useRemoveUserMutation } from "./use-admin-user-mutations";
+import { Avatar } from "@/lib/avatar";
+import {
+  useChangeUserRoleMutation,
+  useRemoveUserMutation,
+} from "./use-admin-user-mutations";
 
 const ALL_ROLES: Role[] = ["ADMIN", "MANAGER", "MEMBER"];
 
 export function ActiveUsersSection({ users }: { users: AdminUserView[] }) {
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Active users</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-dusk-secondary">
+        Active users
+      </h2>
       {users.length === 0 ? (
-        <p className="text-sm text-gray-500">No active users.</p>
+        <p className="text-sm text-dusk-secondary">No active users.</p>
       ) : (
-        <ul className="flex flex-col divide-y divide-black/10 dark:divide-white/15">
+        <ul className="flex flex-col divide-y divide-black/10">
           {users.map((user) => (
             <ActiveUserRow key={user.id} user={user} />
           ))}
@@ -31,10 +37,12 @@ function ActiveUserRow({ user }: { user: AdminUserView }) {
   const error = changeRole.error ?? remove.error;
 
   return (
-    <li className="flex flex-col gap-1 py-2 text-sm">
+    <li className="dusk-row flex flex-col gap-1 px-2 py-2 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span>
-          {user.name} <span className="text-gray-500">({user.email})</span>
+        <span className="flex items-center gap-2 text-dusk-primary">
+          <Avatar name={user.name} size={20} />
+          {user.name}{" "}
+          <span className="text-dusk-secondary">({user.email})</span>
         </span>
         <div className="flex items-center gap-2">
           <select
@@ -42,7 +50,10 @@ function ActiveUserRow({ user }: { user: AdminUserView }) {
             value={user.role ?? "MEMBER"}
             disabled={busy}
             onChange={(event) =>
-              changeRole.mutate({ id: user.id, role: event.target.value as Role })
+              changeRole.mutate({
+                id: user.id,
+                role: event.target.value as Role,
+              })
             }
             className="rounded border border-black/15 bg-transparent px-2 py-1 dark:border-white/20"
           >

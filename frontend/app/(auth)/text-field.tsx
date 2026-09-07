@@ -11,18 +11,18 @@ export function TextField({ id, label, error, ...inputProps }: TextFieldProps) {
 
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className="text-sm font-medium text-dusk-primary">
         {label}
       </label>
       <input
         id={id}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
-        className="rounded border border-black/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+        className={`px-3 py-2 text-sm ${error ? "dusk-input-error" : ""}`}
         {...inputProps}
       />
       {error ? (
-        <p id={errorId} className="text-sm text-red-600 dark:text-red-400">
+        <p id={errorId} className="text-sm text-red-600">
           {error}
         </p>
       ) : null}

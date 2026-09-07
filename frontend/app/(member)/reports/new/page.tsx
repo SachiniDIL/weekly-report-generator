@@ -9,10 +9,14 @@ export default function NewReportPage() {
   const projects = useProjectOptionsQuery();
 
   if (projects.isPending) {
-    return <ReportMessage>Loading…</ReportMessage>;
+    return <ReportMessage tone="loading" />;
   }
   if (projects.isError) {
-    return <ReportMessage tone="error">Couldn&apos;t load the project list.</ReportMessage>;
+    return (
+      <ReportMessage tone="error">
+        Couldn&apos;t load the project list.
+      </ReportMessage>
+    );
   }
 
   return (

@@ -16,14 +16,23 @@ export default function ReviewReportPage() {
   const report = useReportDetailQuery(reportId);
   const history = useReportVersionHistoryQuery(reportId);
 
-  if (!Number.isFinite(reportId) || (report.isError && isReportInaccessible(report.error))) {
-    return <ReportMessage>This report was not found, or you don&apos;t have access to it.</ReportMessage>;
+  if (
+    !Number.isFinite(reportId) ||
+    (report.isError && isReportInaccessible(report.error))
+  ) {
+    return (
+      <ReportMessage>
+        This report was not found, or you don&apos;t have access to it.
+      </ReportMessage>
+    );
   }
   if (report.isError) {
-    return <ReportMessage tone="error">{describeError(report.error)}</ReportMessage>;
+    return (
+      <ReportMessage tone="error">{describeError(report.error)}</ReportMessage>
+    );
   }
   if (report.isPending) {
-    return <ReportMessage>Loading report…</ReportMessage>;
+    return <ReportMessage tone="loading" />;
   }
 
   const data = report.data;
@@ -38,8 +47,8 @@ export default function ReviewReportPage() {
         <ReviewActionsForm reportId={data.id} />
       ) : (
         <ReportMessage>
-          This report is {data.status.replace("_", " ").toLowerCase()} — review actions are only
-          available while it&apos;s awaiting review.
+          This report is {data.status.replace("_", " ").toLowerCase()} — review
+          actions are only available while it&apos;s awaiting review.
         </ReportMessage>
       )}
 

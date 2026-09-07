@@ -12,18 +12,20 @@ export function ReportsHistoryList({
   hrefForReport?: (report: ReportListItemView) => string;
 }) {
   return (
-    <ul className="flex flex-col divide-y divide-black/10 dark:divide-white/15">
+    <ul className="flex flex-col divide-y divide-black/10">
       {reports.map((report) => (
         <li key={report.id}>
           <Link
             href={hrefForReport(report)}
-            className="flex flex-wrap items-center justify-between gap-2 py-3 hover:underline"
+            className="dusk-row flex flex-wrap items-center justify-between gap-2 px-2 py-3"
           >
             <span className="flex flex-col">
-              <span className="text-sm font-medium">
+              <span className="text-sm font-medium text-dusk-primary">
                 {report.weekStart} – {report.weekEnd}
               </span>
-              <span className="text-sm text-gray-500">{report.projectName}</span>
+              <span className="text-sm text-dusk-secondary">
+                {report.projectName}
+              </span>
             </span>
             <ReportStatusBadge status={report.status} />
           </Link>

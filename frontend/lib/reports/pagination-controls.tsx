@@ -17,23 +17,26 @@ export function PaginationControls({
   }
 
   return (
-    <nav className="flex items-center justify-between gap-4 text-sm" aria-label="Pagination">
+    <nav
+      className="flex items-center justify-between gap-4 text-sm"
+      aria-label="Pagination"
+    >
       <button
         type="button"
         onClick={onPrevious}
         disabled={pageNumber === 0}
-        className="rounded border border-black/20 px-3 py-1.5 disabled:opacity-40 dark:border-white/25"
+        className="rounded-lg border border-white/20 px-3 py-1.5 text-dusk-primary transition-colors hover:border-dusk-accent disabled:opacity-40 hover:disabled:border-white/20"
       >
         Previous
       </button>
-      <span className="text-gray-500">
+      <span className="text-dusk-secondary">
         Page {pageNumber + 1} of {totalPages}
       </span>
       <button
         type="button"
         onClick={onNext}
         disabled={pageNumber >= totalPages - 1}
-        className="rounded border border-black/20 px-3 py-1.5 disabled:opacity-40 dark:border-white/25"
+        className="rounded-lg border border-white/20 px-3 py-1.5 text-dusk-primary transition-colors hover:border-dusk-accent disabled:opacity-40 hover:disabled:border-white/20"
       >
         Next
       </button>

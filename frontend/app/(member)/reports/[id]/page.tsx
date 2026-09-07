@@ -22,14 +22,23 @@ export default function EditReportPage() {
   const needsCorrection = report.data?.status === "NEEDS_CORRECTION";
   const history = useReportVersionHistoryQuery(reportId, needsCorrection);
 
-  if (!Number.isFinite(reportId) || (report.isError && isReportInaccessible(report.error))) {
-    return <ReportMessage>This report was not found, or you don&apos;t have access to it.</ReportMessage>;
+  if (
+    !Number.isFinite(reportId) ||
+    (report.isError && isReportInaccessible(report.error))
+  ) {
+    return (
+      <ReportMessage>
+        This report was not found, or you don&apos;t have access to it.
+      </ReportMessage>
+    );
   }
   if (report.isError) {
-    return <ReportMessage tone="error">{describeError(report.error)}</ReportMessage>;
+    return (
+      <ReportMessage tone="error">{describeError(report.error)}</ReportMessage>
+    );
   }
   if (report.isPending) {
-    return <ReportMessage>Loading report…</ReportMessage>;
+    return <ReportMessage tone="loading" />;
   }
 
   const data = report.data;
@@ -43,7 +52,9 @@ export default function EditReportPage() {
   }
 
   const correctionComment =
-    needsCorrection && history.data ? findCorrectionComment(history.data) : null;
+    needsCorrection && history.data
+      ? findCorrectionComment(history.data)
+      : null;
 
   return (
     <main className="mx-auto max-w-3xl p-6">

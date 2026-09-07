@@ -19,15 +19,27 @@ export interface ProjectMemberView {
   email: string;
 }
 
-export function listProjects(includeInactive = false): Promise<ProjectResponse[]> {
+export function listProjects(
+  includeInactive = false,
+): Promise<ProjectResponse[]> {
   return request("/projects", { method: "GET", query: { includeInactive } });
 }
 
-export function createProject(payload: ProjectRequest): Promise<ProjectResponse> {
+/** The current user's own assigned active projects — usable by MEMBERs (unlike `/projects`). */
+export function listAssignedProjects(): Promise<ProjectResponse[]> {
+  return request("/me/projects", { method: "GET" });
+}
+
+export function createProject(
+  payload: ProjectRequest,
+): Promise<ProjectResponse> {
   return request("/projects", { method: "POST", body: payload });
 }
 
-export function updateProject(id: number, payload: ProjectRequest): Promise<ProjectResponse> {
+export function updateProject(
+  id: number,
+  payload: ProjectRequest,
+): Promise<ProjectResponse> {
   return request(`/projects/${id}`, { method: "PUT", body: payload });
 }
 
@@ -36,14 +48,26 @@ export function archiveProject(id: number): Promise<void> {
   return request(`/projects/${id}`, { method: "DELETE" });
 }
 
-export function listProjectMembers(projectId: number): Promise<ProjectMemberView[]> {
+export function listProjectMembers(
+  projectId: number,
+): Promise<ProjectMemberView[]> {
   return request(`/projects/${projectId}/members`, { method: "GET" });
 }
 
-export function assignProjectMember(projectId: number, userId: number): Promise<ProjectMemberView> {
-  return request(`/projects/${projectId}/members/${userId}`, { method: "POST" });
+export function assignProjectMember(
+  projectId: number,
+  userId: number,
+): Promise<ProjectMemberView> {
+  return request(`/projects/${projectId}/members/${userId}`, {
+    method: "POST",
+  });
 }
 
-export function unassignProjectMember(projectId: number, userId: number): Promise<void> {
-  return request(`/projects/${projectId}/members/${userId}`, { method: "DELETE" });
+export function unassignProjectMember(
+  projectId: number,
+  userId: number,
+): Promise<void> {
+  return request(`/projects/${projectId}/members/${userId}`, {
+    method: "DELETE",
+  });
 }

@@ -10,7 +10,9 @@ import { useRequireAuth } from "@/lib/use-require-auth";
 
 export default function ReportViewPage() {
   // Both roles can reach this route; the backend decides who may see this specific report.
-  const { isChecking } = useRequireAuth({ allowedRoles: ["MEMBER", "MANAGER"] });
+  const { isChecking } = useRequireAuth({
+    allowedRoles: ["MEMBER", "MANAGER"],
+  });
   const params = useParams<{ id: string }>();
   const reportId = Number(params.id);
   const query = useReportDetailQuery(reportId);
@@ -19,16 +21,23 @@ export default function ReportViewPage() {
     return null;
   }
 
-  if (!Number.isFinite(reportId) || (query.isError && isReportInaccessible(query.error))) {
+  if (
+    !Number.isFinite(reportId) ||
+    (query.isError && isReportInaccessible(query.error))
+  ) {
     return (
-      <ReportMessage>This report was not found, or you don&apos;t have access to it.</ReportMessage>
+      <ReportMessage>
+        This report was not found, or you don&apos;t have access to it.
+      </ReportMessage>
     );
   }
   if (query.isError) {
-    return <ReportMessage tone="error">{describeError(query.error)}</ReportMessage>;
+    return (
+      <ReportMessage tone="error">{describeError(query.error)}</ReportMessage>
+    );
   }
   if (query.isPending) {
-    return <ReportMessage>Loading report…</ReportMessage>;
+    return <ReportMessage tone="loading" />;
   }
 
   return (

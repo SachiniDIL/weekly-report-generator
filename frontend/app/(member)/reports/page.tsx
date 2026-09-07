@@ -24,14 +24,15 @@ export default function ReportHistoryPage() {
         </Link>
       </header>
 
-      {query.isPending ? <ReportMessage>Loading your reports…</ReportMessage> : null}
+      {query.isPending ? <ReportMessage tone="loading" /> : null}
       {query.isError ? (
         <ReportMessage tone="error">{describeError(query.error)}</ReportMessage>
       ) : null}
 
       {query.isSuccess && query.data.empty ? (
         <p className="rounded border border-dashed border-black/20 p-6 text-center text-sm text-gray-500 dark:border-white/25">
-          You haven&apos;t written any reports yet. Start with &ldquo;Create new report&rdquo;.
+          You haven&apos;t written any reports yet. Start with &ldquo;Create new
+          report&rdquo;.
         </p>
       ) : null}
 

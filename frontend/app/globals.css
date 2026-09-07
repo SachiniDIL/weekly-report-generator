@@ -1,26 +1,469 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   Dusk Glass theme
+   Palette + semantic components live here (Tailwind v4 CSS config, no JS file).
+   Retrofit rules below are intentionally *unlayered* so they win over the
+   ad-hoc Tailwind utility classes the pre-theme components still carry.
+   ========================================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-base: #0d1229;
+  --bg-surface: #111827;
+  --bg-panel: rgba(20, 30, 65, 0.5);
+  --bg-panel-hover: rgba(30, 41, 80, 0.7);
+  --bg-sidebar: rgba(15, 20, 40, 0.95);
+
+  --border-subtle: rgba(99, 120, 200, 0.12);
+  --border-active: rgba(99, 102, 241, 0.5);
+
+  --text-primary: #e0e7ff;
+  --text-secondary: #6272a4;
+  --text-muted: #4c5680;
+
+  --accent: #6366f1;
+  --accent-light: #a5b4fc;
+  --accent-glow: rgba(99, 102, 241, 0.35);
+
+  --input-bg: rgba(15, 20, 40, 0.6);
+  --input-border: rgba(99, 120, 200, 0.2);
+  --row-hover: rgba(99, 102, 241, 0.06);
+
+  --danger: #f87171;
+  --success: #4ade80;
+  --warning: #fb923c;
+
+  /* Legacy tokens the scaffold shipped with — repointed at the theme so any
+     leftover bg-background / text-foreground usage still reads correctly. */
+  --background: var(--bg-surface);
+  --foreground: var(--text-primary);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg-surface);
+  --color-foreground: var(--text-primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-dusk-base: var(--bg-base);
+  --color-dusk-surface: var(--bg-surface);
+  --color-dusk-panel: var(--bg-panel);
+  --color-dusk-sidebar: var(--bg-sidebar);
+  --color-dusk-border: var(--border-subtle);
+  --color-dusk-border-active: var(--border-active);
+  --color-dusk-primary: var(--text-primary);
+  --color-dusk-secondary: var(--text-secondary);
+  --color-dusk-muted: var(--text-muted);
+  --color-dusk-accent: var(--accent);
+  --color-dusk-accent-light: var(--accent-light);
+  --color-dusk-danger: var(--danger);
+  --color-dusk-success: var(--success);
+  --color-dusk-warning: var(--warning);
 }
 
-/* @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-} */
+/* ---- base ---------------------------------------------------------------- */
+
+html {
+  color-scheme: dark;
+}
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  background: linear-gradient(155deg, #0d1229 0%, #111827 60%, #0f172a 100%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family:
+    var(--font-geist-sans),
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+}
+
+::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+::selection {
+  background: var(--accent-glow);
+  color: #fff;
+}
+
+/* Route changes fade rather than cut hard. */
+@keyframes dusk-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+main {
+  animation: dusk-fade-in 0.2s ease-out;
+  transition: opacity 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ---- form controls ---------------------------------------------------------
+   Element selectors, unlayered — override Tailwind utilities on the same node. */
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+textarea,
+select {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-primary);
+  border-radius: 8px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--accent);
+}
+
+select option {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+/* ---- retrofit: remap the ad-hoc colours the pre-theme components carry ---- */
+
+:where(
+  [class~="border-black/10"],
+  [class~="border-black/15"],
+  [class~="border-black/20"],
+  [class~="border-black/[.08]"],
+  [class~="border-white/10"],
+  [class~="border-white/15"],
+  [class~="border-white/20"],
+  [class~="border-white/25"],
+  [class~="border-white/[.145]"]
+) {
+  border-color: var(--border-subtle);
+}
+
+/* Container elements with a full (all-sides) subtle border become glass panels.
+   Buttons/links/<p> and single-side dividers (border-t/b only) are excluded so
+   ghost buttons, empty-states and divider bars keep their shape. */
+:where(section, article, aside, header, form, fieldset, dl, ul, ol, li, div):where([class~="border"]):where(
+    [class~="border-black/10"],
+    [class~="border-black/15"],
+    [class~="border-black/20"],
+    [class~="border-white/10"],
+    [class~="border-white/15"],
+    [class~="border-white/20"],
+    [class~="border-white/25"]
+  ) {
+  background: var(--bg-panel);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+:where(section, article, aside, header, form, fieldset, dl, ul, ol, li, div):where([class~="border"]):where(
+    [class~="border-black/10"],
+    [class~="border-black/15"],
+    [class~="border-black/20"],
+    [class~="border-white/10"],
+    [class~="border-white/15"],
+    [class~="border-white/20"],
+    [class~="border-white/25"]
+  ):hover {
+  border-color: var(--border-active);
+  background: var(--bg-panel-hover);
+}
+
+/* Faint neutral fills → subtle indigo tint. */
+:where([class*="bg-black/"], [class*="bg-white/"]) {
+  background-color: rgba(99, 120, 200, 0.06);
+}
+
+/* Divider borders. */
+:where([class*="divide-black/"], [class*="divide-white/"]) > * + * {
+  border-color: var(--border-subtle);
+}
+
+/* Text colours. */
+:where(.text-gray-500, .text-gray-600, .text-gray-700, .text-gray-400, .text-gray-300, .text-gray-200) {
+  color: var(--text-secondary);
+}
+:where(.text-red-700, .text-red-600, .text-red-500, .text-red-400, .text-red-300) {
+  color: var(--danger);
+}
+:where(.text-green-800, .text-green-700, .text-green-600, .text-green-400, .text-green-300) {
+  color: var(--success);
+}
+:where(.text-amber-600, .text-amber-700, .text-amber-800, .text-amber-200, .text-amber-100, .text-amber-300) {
+  color: var(--warning);
+}
+:where(.text-black\/60, .text-white\/60) {
+  color: var(--text-secondary);
+}
+
+/* Alert / banner fills. */
+:where(.bg-red-50, .bg-red-950) {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+:where(.bg-green-50, .bg-green-950) {
+  background-color: rgba(74, 222, 128, 0.1);
+}
+:where(.bg-amber-50, .bg-amber-950, .bg-amber-950\/40) {
+  background-color: rgba(251, 146, 60, 0.1);
+}
+:where(.border-amber-300, .border-amber-500, .border-amber-800, .border-amber-400\/40) {
+  border-color: rgba(251, 146, 60, 0.35);
+}
+:where(.bg-amber-500) {
+  background-color: var(--warning);
+}
+
+/* Primary buttons: any `bg-foreground … text-background` node. */
+:where([class~="bg-foreground"]) {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: #fff;
+  border-radius: 8px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+button:where([class~="bg-foreground"]):hover:not(:disabled),
+a:where([class~="bg-foreground"]):hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 20px rgba(99, 102, 241, 0.5),
+    0 0 0 1px rgba(129, 140, 248, 0.3);
+}
+:where(.text-background) {
+  color: #fff;
+}
+:where(.border-foreground) {
+  border-color: var(--accent);
+}
+
+/* Underlined text links → accent. */
+a:where([class~="underline"]),
+button:where([class~="underline"]) {
+  color: var(--accent-light);
+  text-underline-offset: 2px;
+}
+a:where([class~="underline"]):hover {
+  color: #c7d2fe;
+}
+
+/* ---- semantic component classes --------------------------------------------
+   Prefer these on new markup; the retrofit above covers existing markup. */
+
+.dusk-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+.dusk-panel:hover {
+  border-color: var(--border-active);
+  background: var(--bg-panel-hover);
+}
+
+.dusk-surface {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+}
+
+.dusk-row {
+  border-radius: 6px;
+  transition: background-color 0.15s ease;
+}
+.dusk-row:hover {
+  background: var(--row-hover);
+}
+
+.dusk-content {
+  transition: opacity 0.15s ease;
+}
+
+.dusk-banner {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--accent-light);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 8px;
+}
+.dusk-banner-success {
+  background: rgba(74, 222, 128, 0.1);
+  color: var(--success);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: 8px;
+}
+.dusk-banner-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+}
+
+.dusk-input-error {
+  border-color: rgba(248, 113, 113, 0.6) !important;
+  border-left-width: 3px !important;
+}
+
+/* ---- status badges -------------------------------------------------------- */
+
+.dusk-badge {
+  display: inline-block;
+  border-radius: 6px;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.dusk-badge[data-status="APPROVED"],
+.dusk-badge[data-status="ACTIVE"] {
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.2);
+}
+.dusk-badge[data-status="SUBMITTED"] {
+  background: rgba(129, 140, 248, 0.1);
+  color: #a5b4fc;
+  border-color: rgba(129, 140, 248, 0.2);
+}
+.dusk-badge[data-status="NEEDS_CORRECTION"] {
+  background: rgba(251, 146, 60, 0.1);
+  color: #fb923c;
+  border-color: rgba(251, 146, 60, 0.2);
+}
+.dusk-badge[data-status="DRAFT"] {
+  background: rgba(99, 120, 200, 0.08);
+  color: #6272a4;
+  border-color: rgba(99, 120, 200, 0.15);
+}
+.dusk-badge[data-status="NOT_STARTED"] {
+  background: rgba(99, 120, 200, 0.05);
+  color: #4c5680;
+  border-color: rgba(99, 120, 200, 0.1);
+}
+.dusk-badge[data-status="PENDING"] {
+  background: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.2);
+}
+.dusk-badge[data-status="REMOVED"] {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* ---- loading skeletons -------------------------------------------------------- */
+
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+.dusk-skeleton {
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(99, 120, 200, 0.05) 0%,
+    rgba(99, 120, 200, 0.12) 50%,
+    rgba(99, 120, 200, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* ---- sidebar / nav (no persistent nav shipped yet — ready for one) -------- */
+
+.dusk-sidebar {
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-subtle);
+}
+
+/* Lightning CSS (Tailwind v4's bundler) drops bare `backdrop-filter` for the
+   default browser targets, so gate it behind @supports where it survives. */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .dusk-panel,
+  :where(section, article, aside, header, form, fieldset, dl, ul, ol, li, div):where([class~="border"]):where(
+      [class~="border-black/10"],
+      [class~="border-black/15"],
+      [class~="border-black/20"],
+      [class~="border-white/10"],
+      [class~="border-white/15"],
+      [class~="border-white/20"],
+      [class~="border-white/25"]
+    ) {
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+  .dusk-sidebar {
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+  }
+}
+.dusk-nav-item {
+  color: var(--text-secondary);
+  border-left: 2px solid transparent;
+  transition: all 0.15s ease;
+}
+.dusk-nav-item:hover {
+  background: rgba(99, 120, 200, 0.1);
+  color: var(--accent-light);
+}
+.dusk-nav-item.is-active {
+  background: rgba(99, 120, 200, 0.18);
+  color: var(--accent-light);
+  border-left-color: #6366f1;
+}
+
+/* ---- recharts ----------------------------------------------------------- */
+
+.recharts-default-tooltip {
+  background: #1e2950 !important;
+  border: 1px solid rgba(99, 120, 200, 0.3) !important;
+  border-radius: 8px !important;
+}
+.recharts-tooltip-label,
+.recharts-tooltip-item {
+  color: #e0e7ff !important;
+}
+.recharts-cartesian-axis-tick-value {
+  fill: var(--text-secondary);
+}
+.recharts-legend-item-text {
+  color: var(--text-secondary) !important;
+}
+.recharts-cartesian-grid line {
+  stroke: rgba(99, 120, 200, 0.15);
 }

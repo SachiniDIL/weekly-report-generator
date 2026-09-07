@@ -4,20 +4,24 @@ import { useState } from "react";
 import { describeError } from "@/lib/api-client";
 import type { Role } from "@/lib/api-client";
 import type { AdminUserView } from "@/lib/api/admin-users";
-import { useApproveUserMutation, useRemoveUserMutation } from "./use-admin-user-mutations";
+import { Avatar } from "@/lib/avatar";
+import {
+  useApproveUserMutation,
+  useRemoveUserMutation,
+} from "./use-admin-user-mutations";
 
 const APPROVAL_ROLES: Role[] = ["MEMBER", "MANAGER"];
 
 export function PendingApprovalsSection({ users }: { users: AdminUserView[] }) {
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-dusk-secondary">
         Pending approvals
       </h2>
       {users.length === 0 ? (
-        <p className="text-sm text-gray-500">No pending signups.</p>
+        <p className="text-sm text-dusk-secondary">No pending signups.</p>
       ) : (
-        <ul className="flex flex-col divide-y divide-black/10 dark:divide-white/15">
+        <ul className="flex flex-col divide-y divide-black/10">
           {users.map((user) => (
             <PendingUserRow key={user.id} user={user} />
           ))}
@@ -35,10 +39,12 @@ function PendingUserRow({ user }: { user: AdminUserView }) {
   const error = approve.error ?? reject.error;
 
   return (
-    <li className="flex flex-col gap-1 py-2 text-sm">
+    <li className="dusk-row flex flex-col gap-1 px-2 py-2 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span>
-          {user.name} <span className="text-gray-500">({user.email})</span>
+        <span className="flex items-center gap-2 text-dusk-primary">
+          <Avatar name={user.name} size={20} />
+          {user.name}{" "}
+          <span className="text-dusk-secondary">({user.email})</span>
         </span>
         <div className="flex items-center gap-2">
           <select

@@ -16,10 +16,12 @@ export default function ManagerDashboardPage() {
 
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-6 p-6">
-      <h1 className="text-xl font-semibold">Team dashboard</h1>
+      <h1 className="text-xl font-semibold text-dusk-primary">
+        Team dashboard
+      </h1>
 
       <nav
-        className="flex gap-1 border-b border-black/10 dark:border-white/15"
+        className="flex gap-1 border-b border-white/10"
         aria-label="Dashboard views"
       >
         {TABS.map((option) => {
@@ -31,10 +33,10 @@ export default function ManagerDashboardPage() {
               role="tab"
               aria-selected={selected}
               onClick={() => setTab(option.value)}
-              className={`px-3 py-2 text-sm ${
+              className={`-mb-px border-b-2 px-3 py-2 text-sm transition-colors ${
                 selected
-                  ? "border-b-2 border-foreground font-medium"
-                  : "text-gray-500 hover:text-foreground"
+                  ? "border-dusk-accent font-medium text-dusk-accent-light"
+                  : "border-transparent text-dusk-secondary hover:text-dusk-primary"
               }`}
             >
               {option.label}

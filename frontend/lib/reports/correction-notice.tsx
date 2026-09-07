@@ -5,11 +5,13 @@ export function CorrectionNotice({ comment }: { comment: ReviewCommentView }) {
   return (
     <aside
       role="alert"
-      className="rounded border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-800 dark:bg-amber-950"
+      className="rounded-xl border border-amber-400/40 bg-amber-950/40 p-4 text-sm"
     >
-      <p className="font-semibold text-amber-800 dark:text-amber-200">Changes requested</p>
-      <p className="mt-1 whitespace-pre-wrap text-amber-900 dark:text-amber-100">{comment.comment}</p>
-      <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">— {comment.managerName}</p>
+      <p className="font-semibold text-amber-200">Changes requested</p>
+      <p className="mt-1 whitespace-pre-wrap text-amber-100">
+        {comment.comment}
+      </p>
+      <p className="mt-2 text-xs text-amber-300">— {comment.managerName}</p>
     </aside>
   );
 }

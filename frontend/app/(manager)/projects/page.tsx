@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { describeError } from "@/lib/api-client";
+import { SkeletonText } from "@/lib/skeleton";
 import { useProjectsQuery } from "@/lib/projects/use-projects-query";
 import { ProjectForm } from "./project-form";
 import { ProjectListItem } from "./project-list-item";
@@ -14,11 +15,11 @@ export default function ProjectsPage() {
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-6 p-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">Projects</h1>
+        <h1 className="text-xl font-semibold text-dusk-primary">Projects</h1>
         <button
           type="button"
           onClick={() => setCreating((open) => !open)}
-          className="rounded bg-foreground px-4 py-2 text-sm font-medium text-background"
+          className="rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background"
         >
           {creating ? "Close" : "New project"}
         </button>
@@ -35,7 +36,7 @@ export default function ProjectsPage() {
         Show archived projects
       </label>
 
-      {projects.isPending ? <p className="text-sm text-gray-500">Loading projects…</p> : null}
+      {projects.isPending ? <SkeletonText lines={4} className="mt-1" /> : null}
       {projects.isError ? (
         <p role="alert" className="text-sm text-red-700 dark:text-red-300">
           {describeError(projects.error)}
