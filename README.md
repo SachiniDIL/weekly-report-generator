@@ -175,8 +175,9 @@ a new account from the sign-up page.
 ## Seed data (optional)
 
 The admin-only account gives you an empty app. For a populated dashboard —
-multiple members, several weeks of reports across every status, version history,
-varied hours — add the `seed` profile **on a first run**:
+3 managers, 9 members, 5 projects and ~48 reports spread over six weeks across
+every status, with version history and varied hours — add the `seed` profile
+**on a first run**:
 
 ```bash
 # from backend/
@@ -190,15 +191,10 @@ anything, so it is safe to leave the profile on, but it only needs to run once.
 
 Password for **every** seeded account: `Seeded@123`
 
-| Role    | Email               |
-| ------- | ------------------- |
-| Manager | `manager1@seed.dev` |
-| Manager | `manager2@seed.dev` |
-| Member  | `member1@seed.dev`  |
-| Member  | `member2@seed.dev`  |
-| Member  | `member3@seed.dev`  |
-| Member  | `member4@seed.dev`  |
-| Member  | `member5@seed.dev`  |
+| Role    | Emails                                    |
+| ------- | ----------------------------------------- |
+| Manager | `manager1@seed.dev` … `manager3@seed.dev` |
+| Member  | `member1@seed.dev` … `member9@seed.dev`   |
 
 The `local` profile still also seeds the admin (`admin@local.dev` /
 `localadmin123`).

@@ -121,6 +121,23 @@ final class SeedContent {
                 List.of(hrs(DEV, "11.0"), hrs(TEST, "5.0"), hrs(MEET, "2.5"), hrs(DOCS, "6.0")));
     }
 
+    static ReportContentRequest searchRelevanceTuning() {
+        return content(
+                "Ship the synonym list and start on typo tolerance for the product search.",
+                "Support tickets about \"can't find X\" dropped noticeably after the boosting change.",
+                "https://github.com/acme/web/pull/2531",
+                List.of(
+                        task("Add field boosting so titles outrank descriptions", "HIGH", 100, 100, "DONE", 8, 7,
+                                "Boosting live; click-through on the top result up 12%"),
+                        task("Curate a synonym list from the top 200 zero-result queries", "MEDIUM", 100, 90, "IN_REVIEW", 6, 6, null),
+                        task("Prototype typo tolerance with a bounded edit distance", "MEDIUM", 40, 20, "IN_PROGRESS", 5, 3, null)),
+                List.of(),
+                List.of(
+                        achievement("Zero-result searches down from 9% to 5% of all queries", true),
+                        achievement("Built a weekly report of the worst-performing queries for the PM", false)),
+                List.of(hrs(DEV, "12.0"), hrs(TEST, "4.5"), hrs(MEET, "2.0"), hrs(DOCS, "1.5")));
+    }
+
     // ---- Internal Tooling ----
 
     static ReportContentRequest ciPipelineHardening() {
@@ -177,6 +194,41 @@ final class SeedContent {
                 List.of(hrs(DEV, "7.0"), hrs(TEST, "3.0"), hrs(MEET, "3.0"), hrs(DOCS, "9.0")));
     }
 
+    static ReportContentRequest featureFlagCleanup() {
+        return content(
+                "Delete the flags cleared for removal and add a staleness check to CI.",
+                "We had 140 flags; roughly half outlived their rollout by months.",
+                "https://github.com/acme/infra/pull/359",
+                List.of(
+                        task("Inventory every flag with its age, owner, and last evaluation", "HIGH", 100, 100, "DONE", 6, 5,
+                                "Flag inventory dashboard shared in #eng"),
+                        task("Remove the 30 flags fully rolled out for 90+ days", "HIGH", 100, 70, "IN_PROGRESS", 10, 8, null),
+                        task("Add a CI warning when a flag has no evaluations in 60 days", "MEDIUM", 100, 100, "DONE", 4, 4,
+                                "Check runs on every PR touching flag config")),
+                List.of(),
+                List.of(
+                        achievement("Flag count down from 140 to 96 with no incidents", true),
+                        achievement("New flags now require an expiry date at creation time", false)),
+                List.of(hrs(DEV, "10.0"), hrs(TEST, "4.0"), hrs(MEET, "3.0"), hrs(DOCS, "2.0")));
+    }
+
+    static ReportContentRequest developerPortalRefresh() {
+        return content(
+                "Migrate the last three service docs pages and turn off the old wiki.",
+                "Engineers kept landing on stale wiki pages from search, so this is mostly a redirect problem.",
+                "https://github.com/acme/infra/pull/366",
+                List.of(
+                        task("Generate service pages from each repo's metadata file", "HIGH", 100, 100, "DONE", 9, 10,
+                                "42 services now have an auto-generated page"),
+                        task("Set up redirects from every old wiki URL", "MEDIUM", 100, 80, "IN_REVIEW", 5, 6, null),
+                        task("Add an ownership widget pulling from the on-call schedule", "LOW", 60, 40, "IN_PROGRESS", 4, 3, null)),
+                List.of(blocker("The old wiki's export doesn't preserve internal links, so redirects are being mapped by hand", false)),
+                List.of(
+                        achievement("Time to find a service owner dropped from minutes to one click", false),
+                        achievement("Docs now regenerate on every merge instead of going stale", false)),
+                List.of(hrs(DEV, "8.0"), hrs(TEST, "2.0"), hrs(MEET, "4.0"), hrs(DOCS, "8.0")));
+    }
+
     // ---- R&D ----
 
     static ReportContentRequest vectorSearchPrototype() {
@@ -228,6 +280,208 @@ final class SeedContent {
                         achievement("Two clients can edit the same document with automatic conflict resolution", true),
                         achievement("Measured sync latency under 80ms on a simulated poor connection", false)),
                 List.of(hrs(DEV, "18.0"), hrs(TEST, "5.0"), hrs(MEET, "2.0"), hrs(DOCS, "1.0")));
+    }
+
+    static ReportContentRequest agentToolingSpike() {
+        return content(
+                "Wire the retrieval tool into the agent loop and measure task completion on the eval set.",
+                "Spike to see whether tool use closes the gap with a fine-tuned model.",
+                "https://github.com/acme/research/pull/70",
+                List.of(
+                        task("Define a tool schema for search, fetch, and summarise", "HIGH", 100, 100, "DONE", 8, 7,
+                                "Schema and mock tools in the research repo"),
+                        task("Run the agent loop over the 300-example eval set", "HIGH", 80, 60, "IN_PROGRESS", 10, 9, null),
+                        task("Log every tool call so we can see where the agent goes wrong", "MEDIUM", 100, 100, "DONE", 4, 5,
+                                "Trace viewer renders each run step by step")),
+                List.of(blocker("Long tool chains blow the context window on ~15% of tasks — needs a summarisation step", true)),
+                List.of(
+                        achievement("Tool use lifts task completion from 61% to 78% on the eval set", true),
+                        achievement("Trace viewer already reused by two other research threads", false)),
+                List.of(hrs(DEV, "15.0"), hrs(TEST, "6.0"), hrs(MEET, "3.0"), hrs(DOCS, "2.0")));
+    }
+
+    // ---- Mobile App ----
+
+    /**
+     * The second report that gets corrected twice — offline sync on the mobile client. Exercises
+     * multi-version history on a different project and member than {@link #checkoutRedesign()}.
+     */
+    static ReportContentRequest offlineSyncEngine() {
+        return content(
+                "Get conflict resolution working for the note editor, then handle attachments.",
+                "Field reports: reps lose edits on the subway every day. This is the top complaint.",
+                "https://github.com/acme/mobile/pull/1204",
+                List.of(
+                        task("Queue writes locally and replay them on reconnect", "HIGH", 100, 90, "IN_REVIEW", 18, 20, null),
+                        task("Conflict resolution", "HIGH", 60, 30, "IN_PROGRESS", 10, 6, null),
+                        task("Show a sync status indicator in the app bar", "LOW", 100, 100, "DONE", 3, 3,
+                                "Indicator ships in the next TestFlight build")),
+                List.of(blocker("Attachment sync needs the new blob storage API, which infra hasn't scheduled", false)),
+                List.of(
+                        achievement("Text edits now survive a full offline session and replay cleanly", false),
+                        achievement("Local write queue is storage-backed, so it survives an app kill", false)),
+                List.of(hrs(DEV, "16.0"), hrs(TEST, "7.0"), hrs(MEET, "2.5"), hrs(DOCS, "1.0")));
+    }
+
+    static ReportContentRequest offlineSyncEngineRevisionOne() {
+        return content(
+                "Finish last-write-wins with a visible conflict banner, then attachments once blob storage lands.",
+                "Split the conflict work per review feedback and linked the merged pieces.",
+                "https://github.com/acme/mobile/pull/1204",
+                List.of(
+                        task("Queue writes locally and replay them on reconnect", "HIGH", 100, 100, "DONE", 18, 20,
+                                "Replay merged in PR #1207"),
+                        task("Last-write-wins resolution with a server timestamp", "HIGH", 100, 100, "DONE", 6, 7,
+                                "Resolution logic merged and unit-tested"),
+                        task("Conflict banner so the user knows a remote edit won", "MEDIUM", 70, 45, "IN_PROGRESS", 4, 3, null),
+                        task("Show a sync status indicator in the app bar", "LOW", 100, 100, "DONE", 3, 3,
+                                "Indicator shipped in TestFlight build 88")),
+                List.of(blocker("Attachment sync needs the new blob storage API, which infra hasn't scheduled", false)),
+                List.of(
+                        achievement("Text edits now survive a full offline session and replay cleanly", false),
+                        achievement("Local write queue is storage-backed, so it survives an app kill", false)),
+                List.of(hrs(DEV, "15.0"), hrs(TEST, "8.0"), hrs(MEET, "2.5"), hrs(DOCS, "1.5")));
+    }
+
+    static ReportContentRequest offlineSyncEngineRevisionTwo() {
+        return content(
+                "Pick up attachment sync now that blob storage is in staging.",
+                "Added the crash-rate number the review asked for.",
+                "https://github.com/acme/mobile/pull/1204",
+                List.of(
+                        task("Conflict banner so the user knows a remote edit won", "MEDIUM", 100, 100, "DONE", 4, 5,
+                                "Banner live in TestFlight build 91"),
+                        task("Attachment upload queue on top of the blob storage API", "HIGH", 30, 10, "IN_PROGRESS", 10, 3, null)),
+                List.of(),
+                List.of(
+                        achievement("Offline note editing shipped to the full beta group; sync-related crashes at zero over 9 days", false),
+                        achievement("Replay logic reused as-is for the offline expense form", false)),
+                List.of(hrs(DEV, "14.0"), hrs(TEST, "9.0"), hrs(MEET, "2.0"), hrs(DOCS, "1.0")));
+    }
+
+    static ReportContentRequest pushNotificationsRework() {
+        return content(
+                "Move the last two notification types onto the new template system and delete the old sender.",
+                "Open rates are low because half our pushes have no deep link.",
+                "https://github.com/acme/mobile/pull/1221",
+                List.of(
+                        task("Add deep links to every notification payload", "HIGH", 100, 100, "DONE", 8, 9,
+                                "Every push now opens the relevant screen"),
+                        task("Per-type notification preferences in settings", "MEDIUM", 100, 85, "IN_REVIEW", 7, 7, null),
+                        task("Delete the legacy notification sender", "LOW", 40, 20, "IN_PROGRESS", 3, 2, null)),
+                List.of(),
+                List.of(
+                        achievement("Push open rate up from 8% to 14% after adding deep links", true),
+                        achievement("Notification code is now one path instead of three", false)),
+                List.of(hrs(DEV, "11.0"), hrs(TEST, "5.0"), hrs(MEET, "3.0"), hrs(DOCS, "2.0")));
+    }
+
+    static ReportContentRequest mobileReleaseAutomation() {
+        return content(
+                "Get the release train to cut, build, and submit both stores with no manual steps.",
+                "Cutting a release is a half-day of one engineer's time every two weeks.",
+                "https://github.com/acme/mobile/pull/1233",
+                List.of(
+                        task("Automate version bump, changelog, and tag on a schedule", "HIGH", 100, 100, "DONE", 8, 8,
+                                "Release branch cuts itself every other Monday"),
+                        task("Upload builds to TestFlight and Play internal track from CI", "HIGH", 100, 90, "IN_REVIEW", 10, 11, null),
+                        task("Post the release checklist to Slack with links", "LOW", 100, 100, "DONE", 2, 2,
+                                "Checklist auto-posts to #mobile-releases")),
+                List.of(blocker("Play Console API keeps rejecting the CI service account — waiting on a Google support ticket", true)),
+                List.of(
+                        achievement("iOS side of the release is fully hands-off through TestFlight", true),
+                        achievement("Release notes now assembled from PR titles automatically", false)),
+                List.of(hrs(DEV, "13.0"), hrs(TEST, "4.0"), hrs(MEET, "2.0"), hrs(DOCS, "3.0")));
+    }
+
+    // ---- Platform Migration ----
+
+    static ReportContentRequest authServiceMigration() {
+        return content(
+                "Cut read traffic over to the new auth service and watch error rates for a week.",
+                "This is the riskiest slice of the migration — every request touches auth.",
+                "https://github.com/acme/platform/pull/489",
+                List.of(
+                        task("Shadow-run the new auth service against production traffic", "HIGH", 100, 100, "DONE", 14, 16,
+                                "Two weeks of shadow traffic, response parity at 99.98%"),
+                        task("Move token validation to the new service behind a flag", "HIGH", 100, 75, "IN_REVIEW", 10, 9, null),
+                        task("Write the rollback runbook and rehearse it in staging", "MEDIUM", 100, 100, "DONE", 5, 6,
+                                "Rollback rehearsed; takes under 3 minutes")),
+                List.of(blocker("The legacy service and the new one disagree on how expired-token errors are shaped — clients depend on the old shape", true)),
+                List.of(
+                        achievement("New auth service handling 100% of shadow traffic with parity", true),
+                        achievement("p99 token validation latency down 40% versus the monolith", false)),
+                List.of(hrs(DEV, "15.0"), hrs(TEST, "10.0"), hrs(MEET, "4.0"), hrs(DOCS, "5.0")));
+    }
+
+    static ReportContentRequest authServiceMigrationRevisionOne() {
+        return content(
+                "Ship the error-shape adapter, then move token validation for real.",
+                "Added the compatibility layer the review asked for instead of a hard cutover.",
+                "https://github.com/acme/platform/pull/489",
+                List.of(
+                        task("Adapter that rewrites new-service errors into the legacy shape", "HIGH", 100, 100, "DONE", 8, 9,
+                                "Adapter merged; contract tests cover every documented error code"),
+                        task("Move token validation to the new service behind a flag", "HIGH", 100, 90, "IN_REVIEW", 10, 10, null),
+                        task("Notify the three client teams still parsing raw error bodies", "MEDIUM", 100, 100, "DONE", 3, 2,
+                                "All three ack'd; two have migrated already")),
+                List.of(),
+                List.of(
+                        achievement("New auth service handling 100% of shadow traffic with parity", true),
+                        achievement("p99 token validation latency down 40% versus the monolith", false)),
+                List.of(hrs(DEV, "16.0"), hrs(TEST, "9.0"), hrs(MEET, "3.0"), hrs(DOCS, "4.0")));
+    }
+
+    static ReportContentRequest authServiceMigrationRevisionTwo() {
+        return content(
+                "Move write traffic once read traffic has been clean for a full week.",
+                "Added the adoption timeline the review wanted.",
+                "https://github.com/acme/platform/pull/489",
+                List.of(
+                        task("Move token validation to the new service behind a flag", "HIGH", 100, 100, "DONE", 10, 11,
+                                "100% of read traffic on the new service for 8 days, error rate flat"),
+                        task("Dashboard old-vs-new traffic split for the cutover", "MEDIUM", 100, 100, "DONE", 4, 4,
+                                "Split visible in Grafana with an alert on divergence")),
+                List.of(),
+                List.of(
+                        achievement("All auth read traffic now served by the new service; monolith auth path is dead code", true),
+                        achievement("Cutover plan adopted as the template for the next two service migrations", false)),
+                List.of(hrs(DEV, "12.0"), hrs(TEST, "8.0"), hrs(MEET, "5.0"), hrs(DOCS, "4.0")));
+    }
+
+    static ReportContentRequest dataStoreCutover() {
+        return content(
+                "Backfill the last table and run the dual-write reconciliation job to completion.",
+                "Dual-write has been running for three weeks; now it's about proving the data matches.",
+                "https://github.com/acme/platform/pull/502",
+                List.of(
+                        task("Backfill the orders table into the new store", "HIGH", 100, 100, "DONE", 12, 14,
+                                "18M rows backfilled; row counts match to the row"),
+                        task("Reconciliation job that diffs old vs new nightly", "HIGH", 100, 80, "IN_REVIEW", 8, 8, null),
+                        task("Move read queries for the orders API to the new store", "MEDIUM", 30, 15, "IN_PROGRESS", 6, 3, null)),
+                List.of(blocker("Reconciliation finds ~200 rows a night that differ on a timestamp field — tracking down the write path", false)),
+                List.of(
+                        achievement("Orders history fully backfilled and byte-identical on spot checks", false),
+                        achievement("Dual-write lag holding under 500ms at peak", false)),
+                List.of(hrs(DEV, "14.0"), hrs(TEST, "8.0"), hrs(MEET, "3.0"), hrs(DOCS, "3.0")));
+    }
+
+    static ReportContentRequest legacyEndpointDeprecation() {
+        return content(
+                "Turn off the five v1 endpoints with zero traffic and publish the sunset date for the rest.",
+                "Every v1 endpoint we keep alive is a reason the monolith can't be switched off.",
+                "https://github.com/acme/platform/pull/515",
+                List.of(
+                        task("Add request logging with caller identity to every v1 endpoint", "HIGH", 100, 100, "DONE", 6, 6,
+                                "30 days of caller data collected"),
+                        task("Remove the 5 endpoints with no calls in 30 days", "HIGH", 100, 100, "DONE", 5, 4,
+                                "Endpoints removed; no incidents"),
+                        task("Email remaining callers with a sunset date and migration guide", "MEDIUM", 80, 50, "IN_PROGRESS", 5, 4, null)),
+                List.of(),
+                List.of(
+                        achievement("v1 surface down from 41 endpoints to 36 with more scheduled", false),
+                        achievement("Now know exactly which team owns each remaining v1 caller", true)),
+                List.of(hrs(DEV, "7.0"), hrs(TEST, "3.0"), hrs(MEET, "4.0"), hrs(DOCS, "6.0")));
     }
 
     // ---- builder helpers ----

@@ -86,8 +86,8 @@ class ProductionSeederIntegrationTest {
 
     @Test
     void seedsTheDatasetOnStartupAndIsIdempotentWhenRerun() {
-        assertThat(seededUsers(Role.MANAGER)).hasSize(2);
-        assertThat(seededUsers(Role.MEMBER)).hasSize(5);
+        assertThat(seededUsers(Role.MANAGER)).hasSize(SeedCatalog.MANAGERS.size());
+        assertThat(seededUsers(Role.MEMBER)).hasSize(SeedCatalog.MEMBERS.size());
         assertThat(seededUsers(Role.MANAGER))
                 .allSatisfy(user -> assertThat(user.getStatus()).isEqualTo(UserStatus.ACTIVE));
 
