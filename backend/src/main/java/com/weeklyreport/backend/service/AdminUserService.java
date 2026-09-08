@@ -1,11 +1,13 @@
 package com.weeklyreport.backend.service;
 
+import com.weeklyreport.backend.domain.Role;
 import com.weeklyreport.backend.domain.User;
 import com.weeklyreport.backend.domain.UserStatus;
 import com.weeklyreport.backend.dto.AdminCreateUserRequest;
 import com.weeklyreport.backend.dto.AdminUserView;
 import com.weeklyreport.backend.dto.ApproveUserRequest;
 import com.weeklyreport.backend.dto.ChangeRoleRequest;
+import com.weeklyreport.backend.exception.AdminNotRemovableException;
 import com.weeklyreport.backend.exception.InvalidUserStateException;
 import com.weeklyreport.backend.exception.UserNotFoundException;
 import com.weeklyreport.backend.repository.UserRepository;
@@ -58,6 +60,9 @@ public class AdminUserService {
     @Transactional
     public void removeUser(long id) {
         User user = getUser(id);
+        if (user.getRole() == Role.ADMIN) {
+            throw new AdminNotRemovableException();
+        }
         switch (user.getStatus()) {
             case PENDING -> userRepository.delete(user);
             case ACTIVE -> {

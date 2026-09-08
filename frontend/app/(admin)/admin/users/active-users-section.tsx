@@ -3,6 +3,7 @@
 import type { Role } from "@/lib/api-client";
 import type { AdminUserView } from "@/lib/api/admin-users";
 import { Avatar } from "@/lib/avatar";
+import { useConfirm } from "@/lib/confirm-dialog";
 import {
   useChangeUserRoleMutation,
   useRemoveUserMutation,
@@ -32,7 +33,37 @@ export function ActiveUsersSection({ users }: { users: AdminUserView[] }) {
 function ActiveUserRow({ user }: { user: AdminUserView }) {
   const changeRole = useChangeUserRoleMutation();
   const remove = useRemoveUserMutation();
+  const confirm = useConfirm();
   const busy = changeRole.isPending || remove.isPending;
+  const currentRole = user.role ?? "MEMBER";
+  // Admin accounts are protected — the backend rejects removing one, so don't offer it here.
+  const isAdmin = currentRole === "ADMIN";
+
+  async function handleRoleChange(nextRole: Role) {
+    if (nextRole === currentRole) {
+      return;
+    }
+    const confirmed = await confirm({
+      title: "Change this user's role?",
+      message: `${user.name} will change from ${currentRole} to ${nextRole}. Their access changes immediately.`,
+      confirmLabel: "Change role",
+    });
+    if (confirmed) {
+      changeRole.mutate({ id: user.id, role: nextRole });
+    }
+  }
+
+  async function handleRemove() {
+    const confirmed = await confirm({
+      title: "Remove this user?",
+      message: `${user.name} (${user.email}) loses access immediately and any active sessions are ended. This can't be undone.`,
+      confirmLabel: "Remove user",
+      tone: "danger",
+    });
+    if (confirmed) {
+      remove.mutate(user.id);
+    }
+  }
 
   return (
     <li className="dusk-row flex flex-col gap-1 px-2 py-2 text-sm">
@@ -45,14 +76,9 @@ function ActiveUserRow({ user }: { user: AdminUserView }) {
         <div className="flex items-center gap-2">
           <select
             aria-label={`Role for ${user.name}`}
-            value={user.role ?? "MEMBER"}
+            value={currentRole}
             disabled={busy}
-            onChange={(event) =>
-              changeRole.mutate({
-                id: user.id,
-                role: event.target.value as Role,
-              })
-            }
+            onChange={(event) => handleRoleChange(event.target.value as Role)}
             className="rounded border border-black/15 bg-transparent px-2 py-1 dark:border-white/20"
           >
             {ALL_ROLES.map((option) => (
@@ -61,14 +87,18 @@ function ActiveUserRow({ user }: { user: AdminUserView }) {
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => remove.mutate(user.id)}
-            className="text-red-600 underline disabled:opacity-40"
-          >
-            Remove
-          </button>
+          {isAdmin ? (
+            <span className="text-xs text-dusk-muted">Protected</span>
+          ) : (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={handleRemove}
+              className="text-red-600 underline disabled:opacity-40"
+            >
+              Remove
+            </button>
+          )}
         </div>
       </div>
     </li>

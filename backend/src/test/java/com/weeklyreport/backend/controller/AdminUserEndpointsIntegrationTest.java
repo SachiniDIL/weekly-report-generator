@@ -218,6 +218,19 @@ class AdminUserEndpointsIntegrationTest {
     }
 
     @Test
+    void anAdminAccountCannotBeRemoved() throws Exception {
+        User admin = persistUser("Admin", "admin@example.com", UserStatus.ACTIVE, Role.ADMIN);
+        User otherAdmin = persistUser("Other Admin", "other-admin@example.com", UserStatus.ACTIVE, Role.ADMIN);
+
+        mockMvc.perform(delete("/admin/users/" + otherAdmin.getId()).header("Authorization", bearer(admin)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("An admin account cannot be removed."));
+
+        assertThat(userRepository.findById(otherAdmin.getId()).orElseThrow().getStatus())
+                .isEqualTo(UserStatus.ACTIVE);
+    }
+
+    @Test
     void operatingOnAnUnknownUserIdReturnsACleanNotFound() throws Exception {
         User admin = persistUser("Admin", "admin@example.com", UserStatus.ACTIVE, Role.ADMIN);
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Role } from "@/lib/api-client";
+import { useConfirm } from "@/lib/confirm-dialog";
 import { useCreateAdminUserMutation } from "./use-admin-user-mutations";
 
 const ALL_ROLES: Role[] = ["ADMIN", "MANAGER", "MEMBER"];
@@ -16,6 +17,7 @@ export function CreateUserForm() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [validationError, setValidationError] = useState<string | null>(null);
   const mutation = useCreateAdminUserMutation();
+  const confirm = useConfirm();
 
   function update<Key extends keyof typeof form>(
     key: Key,
@@ -25,7 +27,7 @@ export function CreateUserForm() {
     setValidationError(null);
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (
       form.name.trim() === "" ||
@@ -37,6 +39,16 @@ export function CreateUserForm() {
       );
       return;
     }
+
+    const confirmed = await confirm({
+      title: "Create this user?",
+      message: `${form.email.trim()} will get an active ${form.role} account and can sign in immediately.`,
+      confirmLabel: "Create user",
+    });
+    if (!confirmed) {
+      return;
+    }
+
     mutation.mutate(
       {
         name: form.name.trim(),

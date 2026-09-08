@@ -13,10 +13,16 @@
   --nm-shadow-dark: #c7cdd9;
   --nm-shadow-light: #ffffff;
 
-  --nm-raised: 6px 6px 14px var(--nm-shadow-dark), -6px -6px 14px var(--nm-shadow-light);
-  --nm-raised-sm: 3px 3px 8px var(--nm-shadow-dark), -3px -3px 8px var(--nm-shadow-light);
-  --nm-inset: inset 4px 4px 9px var(--nm-shadow-dark), inset -4px -4px 9px var(--nm-shadow-light);
-  --nm-inset-sm: inset 2px 2px 5px var(--nm-shadow-dark), inset -2px -2px 5px var(--nm-shadow-light);
+  --nm-raised:
+    6px 6px 14px var(--nm-shadow-dark), -6px -6px 14px var(--nm-shadow-light);
+  --nm-raised-sm:
+    3px 3px 8px var(--nm-shadow-dark), -3px -3px 8px var(--nm-shadow-light);
+  --nm-inset:
+    inset 4px 4px 9px var(--nm-shadow-dark),
+    inset -4px -4px 9px var(--nm-shadow-light);
+  --nm-inset-sm:
+    inset 2px 2px 5px var(--nm-shadow-dark),
+    inset -2px -2px 5px var(--nm-shadow-light);
 
   --bg-base: var(--nm-bg);
   --bg-surface: var(--nm-bg);
@@ -132,7 +138,9 @@ main {
 
 /* ---- form controls — pressed into the surface ---------------------------- */
 
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(
+    [type="file"]
+  ),
 textarea,
 select {
   background: var(--nm-bg);
@@ -147,7 +155,9 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
 textarea:focus,
 select:focus {
   outline: none;
-  box-shadow: var(--nm-inset-sm), 0 0 0 2px rgba(91, 99, 230, 0.35);
+  box-shadow:
+    var(--nm-inset-sm),
+    0 0 0 2px rgba(91, 99, 230, 0.35);
 }
 
 input[type="checkbox"],
@@ -177,7 +187,19 @@ select option {
 }
 
 /* Container elements with a full border become raised soft-UI cards. */
-:where(section, article, aside, header, form, fieldset, dl, ul, ol, li, div):where([class~="border"]):where(
+:where(
+    section,
+    article,
+    aside,
+    header,
+    form,
+    fieldset,
+    dl,
+    ul,
+    ol,
+    li,
+    div
+  ):where([class~="border"]):where(
     [class~="border-black/10"],
     [class~="border-black/15"],
     [class~="border-black/20"],
@@ -204,7 +226,9 @@ button:where([class~="border"]):where(
   border-radius: 10px;
   color: var(--text-secondary);
   box-shadow: var(--nm-raised-sm);
-  transition: box-shadow 0.15s ease, color 0.15s ease;
+  transition:
+    box-shadow 0.15s ease,
+    color 0.15s ease;
 }
 button:where([class~="border"]):where(
     [class~="border-black/20"],
@@ -235,16 +259,42 @@ button:where([class~="border"]):where(
 }
 
 /* Text colours. */
-:where(.text-gray-500, .text-gray-600, .text-gray-700, .text-gray-400, .text-gray-300, .text-gray-200) {
+:where(
+  .text-gray-500,
+  .text-gray-600,
+  .text-gray-700,
+  .text-gray-400,
+  .text-gray-300,
+  .text-gray-200
+) {
   color: var(--text-secondary);
 }
-:where(.text-red-700, .text-red-600, .text-red-500, .text-red-400, .text-red-300) {
+:where(
+  .text-red-700,
+  .text-red-600,
+  .text-red-500,
+  .text-red-400,
+  .text-red-300
+) {
   color: var(--danger);
 }
-:where(.text-green-800, .text-green-700, .text-green-600, .text-green-400, .text-green-300) {
+:where(
+  .text-green-800,
+  .text-green-700,
+  .text-green-600,
+  .text-green-400,
+  .text-green-300
+) {
   color: var(--success);
 }
-:where(.text-amber-600, .text-amber-700, .text-amber-800, .text-amber-200, .text-amber-100, .text-amber-300) {
+:where(
+  .text-amber-600,
+  .text-amber-700,
+  .text-amber-800,
+  .text-amber-200,
+  .text-amber-100,
+  .text-amber-300
+) {
   color: var(--warning);
 }
 :where(.text-black\/60, .text-white\/60) {
@@ -264,7 +314,12 @@ button:where([class~="border"]):where(
   background-color: rgba(217, 123, 31, 0.12);
   box-shadow: none;
 }
-:where(.border-amber-300, .border-amber-500, .border-amber-800, .border-amber-400\/40) {
+:where(
+  .border-amber-300,
+  .border-amber-500,
+  .border-amber-800,
+  .border-amber-400\/40
+) {
   border-color: rgba(217, 123, 31, 0.4);
 }
 :where(.bg-amber-500) {
@@ -391,7 +446,9 @@ a:where([class~="underline"]):hover {
 }
 
 .dusk-input-error {
-  box-shadow: var(--nm-inset-sm), 0 0 0 1.5px rgba(220, 76, 76, 0.55) !important;
+  box-shadow:
+    var(--nm-inset-sm),
+    0 0 0 1.5px rgba(220, 76, 76, 0.55) !important;
 }
 
 /* ---- status badges — soft tinted pills ---------------------------------------- */
