@@ -6,16 +6,14 @@ import { BackButton } from "@/lib/back-link";
 import { isReportInaccessible } from "@/lib/reports/report-access";
 import { ReportContentView } from "@/lib/reports/report-content-view";
 import { ReportMessage } from "@/lib/reports/report-message";
+import { PriorVersionsSection } from "@/lib/reports/prior-versions-section";
 import { useReportDetailQuery } from "@/lib/reports/use-report-detail-query";
-import { useReportVersionHistoryQuery } from "@/lib/reports/use-report-version-history-query";
-import { VersionHistoryList } from "@/lib/reports/version-history-list";
 import { ReviewActionsForm } from "./review-actions-form";
 
 export default function ReviewReportPage() {
   const params = useParams<{ id: string }>();
   const reportId = Number(params.id);
   const report = useReportDetailQuery(reportId);
-  const history = useReportVersionHistoryQuery(reportId);
 
   if (
     !Number.isFinite(reportId) ||
@@ -38,7 +36,6 @@ export default function ReviewReportPage() {
 
   const data = report.data;
   const awaitingReview = data.status === "SUBMITTED";
-  const priorVersions = (history.data ?? []).slice(1);
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6">
@@ -54,12 +51,10 @@ export default function ReviewReportPage() {
         </ReportMessage>
       )}
 
-      {priorVersions.length > 0 ? (
-        <section className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold">Previous versions</h2>
-          <VersionHistoryList versions={priorVersions} />
-        </section>
-      ) : null}
+      <PriorVersionsSection
+        reportId={reportId}
+        enabled={data.currentVersionNo > 1}
+      />
     </main>
   );
 }

@@ -144,11 +144,14 @@ describe("EditReportPage", () => {
     ).toBe(true);
   });
 
-  it("shows the manager's correction comment for a NEEDS_CORRECTION report", async () => {
-    respondWith(report({ status: "NEEDS_CORRECTION" }), [
-      { content: { ...EMPTY_CONTENT, versionNo: 2 }, reviewComment: null },
+  it("shows the correction comment and the earlier versions for a NEEDS_CORRECTION report", async () => {
+    respondWith(report({ status: "NEEDS_CORRECTION", currentVersionNo: 2 }), [
       {
-        content: { ...EMPTY_CONTENT, versionNo: 1 },
+        content: { ...EMPTY_CONTENT, versionNo: 2, reportVersionId: 2 },
+        reviewComment: null,
+      },
+      {
+        content: { ...EMPTY_CONTENT, versionNo: 1, reportVersionId: 1 },
         reviewComment: {
           action: "CHANGES_REQUESTED",
           comment: "Add the hours breakdown before resubmitting",
@@ -160,10 +163,19 @@ describe("EditReportPage", () => {
 
     renderWithQueryClient(<EditReportPage />);
 
+    const notice = await screen.findByRole("alert");
     expect(
-      await screen.findByText("Add the hours breakdown before resubmitting"),
+      within(notice).getByText("Add the hours breakdown before resubmitting"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Changes requested")).toBeInTheDocument();
+    expect(within(notice).getByText("Changes requested")).toBeInTheDocument();
+
+    const priorVersions = await screen.findByRole("region", {
+      name: "Previous versions",
+    });
+    expect(within(priorVersions).getByText("Version 1")).toBeInTheDocument();
+    expect(
+      within(priorVersions).getByText(/Changes requested by Dana/),
+    ).toBeInTheDocument();
   });
 
   it("renders a SUBMITTED report read-only, with no editing controls", async () => {
@@ -182,6 +194,50 @@ describe("EditReportPage", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Submit for review" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("lets a member see the previous versions of a read-only report", async () => {
+    respondWith(report({ status: "APPROVED", currentVersionNo: 2 }), [
+      {
+        content: { ...EMPTY_CONTENT, versionNo: 2, reportVersionId: 2 },
+        reviewComment: {
+          action: "APPROVED",
+          comment: null,
+          managerName: "Dana",
+          createdAt: "2026-09-08T00:00:00Z",
+        },
+      },
+      {
+        content: { ...EMPTY_CONTENT, versionNo: 1, reportVersionId: 1 },
+        reviewComment: {
+          action: "CHANGES_REQUESTED",
+          comment: "Fix the numbers",
+          managerName: "Dana",
+          createdAt: "2026-09-06T00:00:00Z",
+        },
+      },
+    ]);
+
+    renderWithQueryClient(<EditReportPage />);
+
+    const priorVersions = await screen.findByRole("region", {
+      name: "Previous versions",
+    });
+    expect(within(priorVersions).getByText("Version 1")).toBeInTheDocument();
+    expect(
+      within(priorVersions).getByText("Fix the numbers"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows no previous-versions section for a report that only ever had one version", async () => {
+    respondWith(report({ status: "APPROVED", currentVersionNo: 1 }), []);
+
+    renderWithQueryClient(<EditReportPage />);
+
+    await screen.findByText("Apollo");
+    expect(
+      screen.queryByRole("region", { name: "Previous versions" }),
     ).not.toBeInTheDocument();
   });
 });

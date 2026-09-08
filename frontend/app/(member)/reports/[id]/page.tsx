@@ -5,6 +5,7 @@ import { describeError } from "@/lib/api-client";
 import { BackLink } from "@/lib/back-link";
 import { CorrectionNotice } from "@/lib/reports/correction-notice";
 import { findCorrectionComment } from "@/lib/reports/find-correction-comment";
+import { PriorVersionsSection } from "@/lib/reports/prior-versions-section";
 import { isReportInaccessible } from "@/lib/reports/report-access";
 import { ReportContentView } from "@/lib/reports/report-content-view";
 import { ReportMessage } from "@/lib/reports/report-message";
@@ -46,9 +47,13 @@ export default function EditReportPage() {
 
   if (!EDITABLE_STATUSES.includes(data.status)) {
     return (
-      <main className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+      <main className="mx-auto flex w-full max-w-3xl flex-col gap-6">
         <BackLink href="/reports" label="My Reports" />
         <ReportContentView report={data} />
+        <PriorVersionsSection
+          reportId={reportId}
+          enabled={data.currentVersionNo > 1}
+        />
       </main>
     );
   }
@@ -76,6 +81,10 @@ export default function EditReportPage() {
           weekEnd: data.weekEnd,
         }}
         initialContent={reportContentFormFromResponse(data.content)}
+      />
+      <PriorVersionsSection
+        reportId={reportId}
+        enabled={data.currentVersionNo > 1}
       />
     </main>
   );

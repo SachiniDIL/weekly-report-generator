@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { describeError } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
 import { BackButton, BackLink } from "@/lib/back-link";
+import { PriorVersionsSection } from "@/lib/reports/prior-versions-section";
 import { isReportInaccessible } from "@/lib/reports/report-access";
 import { ReportContentView } from "@/lib/reports/report-content-view";
 import { ReportMessage } from "@/lib/reports/report-message";
@@ -44,13 +45,17 @@ export default function ReportViewPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6 md:p-8">
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6 md:p-8">
       {user?.role === "MANAGER" ? (
         <BackButton />
       ) : (
         <BackLink href="/reports" label="My Reports" />
       )}
       <ReportContentView report={query.data} />
+      <PriorVersionsSection
+        reportId={reportId}
+        enabled={query.data.currentVersionNo > 1}
+      />
     </main>
   );
 }
