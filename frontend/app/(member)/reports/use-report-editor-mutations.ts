@@ -9,6 +9,7 @@ import {
   type ReportContentRequest,
   type ReportResponse,
 } from "@/lib/api/reports";
+import { useToast } from "@/lib/toast/toast-context";
 
 export interface ReportEditorValues {
   /** Only used when creating; ignored (and null) for an existing report. */
@@ -40,11 +41,13 @@ async function saveContent(
 export function useSaveReportDraftMutation(reportId: number | null) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   return useMutation<ReportResponse, Error, ReportEditorValues>({
     mutationFn: (values) => saveContent(reportId, values),
     onSuccess: (report) => {
       queryClient.setQueryData(["report", report.id], report);
+      toast.success("Draft saved.");
       if (reportId == null) {
         router.replace(`/reports/${report.id}`);
       }
@@ -55,6 +58,7 @@ export function useSaveReportDraftMutation(reportId: number | null) {
 export function useSubmitReportMutation(reportId: number | null) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   return useMutation<ReportResponse, Error, ReportEditorValues>({
     mutationFn: async (values) => {
@@ -63,6 +67,7 @@ export function useSubmitReportMutation(reportId: number | null) {
     },
     onSuccess: (report) => {
       queryClient.setQueryData(["report", report.id], report);
+      toast.success("Report submitted for review.");
       router.replace(`/reports/${report.id}`);
     },
   });

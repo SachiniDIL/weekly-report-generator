@@ -1,6 +1,5 @@
 "use client";
 
-import { describeError } from "@/lib/api-client";
 import type { Role } from "@/lib/api-client";
 import type { AdminUserView } from "@/lib/api/admin-users";
 import { Avatar } from "@/lib/avatar";
@@ -34,7 +33,6 @@ function ActiveUserRow({ user }: { user: AdminUserView }) {
   const changeRole = useChangeUserRoleMutation();
   const remove = useRemoveUserMutation();
   const busy = changeRole.isPending || remove.isPending;
-  const error = changeRole.error ?? remove.error;
 
   return (
     <li className="dusk-row flex flex-col gap-1 px-2 py-2 text-sm">
@@ -73,11 +71,6 @@ function ActiveUserRow({ user }: { user: AdminUserView }) {
           </button>
         </div>
       </div>
-      {error ? (
-        <p role="alert" className="text-red-700 dark:text-red-300">
-          {describeError(error)}
-        </p>
-      ) : null}
     </li>
   );
 }

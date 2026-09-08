@@ -152,12 +152,6 @@ export function ReportEditorForm({
         </p>
       ) : null}
 
-      {saveDraft.isSuccess && reportId != null ? (
-        <p role="status" className="dusk-banner-success p-3 text-sm">
-          Draft saved.
-        </p>
-      ) : null}
-
       <div className="flex flex-wrap gap-3">
         <button
           type="button"

@@ -365,6 +365,31 @@ a:where([class~="underline"]):hover {
   box-shadow: var(--nm-inset-sm);
 }
 
+/* ---- toasts — raised soft-UI cards, slide up from the bottom-right ----------- */
+
+@keyframes dusk-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.dusk-toast {
+  border-radius: 12px;
+  box-shadow: var(--nm-raised);
+  animation: dusk-toast-in 0.18s ease-out;
+}
+/* Override the inset banner shadow — a floating toast reads as raised, not pressed-in. */
+.dusk-toast.dusk-banner,
+.dusk-toast.dusk-banner-success,
+.dusk-toast.dusk-banner-error {
+  box-shadow: var(--nm-raised);
+}
+
 .dusk-input-error {
   box-shadow: var(--nm-inset-sm), 0 0 0 1.5px rgba(220, 76, 76, 0.55) !important;
 }

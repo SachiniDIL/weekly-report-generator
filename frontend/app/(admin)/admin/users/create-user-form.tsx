@@ -1,27 +1,40 @@
 "use client";
 
 import { useState } from "react";
-import { describeError } from "@/lib/api-client";
 import type { Role } from "@/lib/api-client";
 import { useCreateAdminUserMutation } from "./use-admin-user-mutations";
 
 const ALL_ROLES: Role[] = ["ADMIN", "MANAGER", "MEMBER"];
-const EMPTY_FORM = { name: "", email: "", password: "", role: "MEMBER" as Role };
+const EMPTY_FORM = {
+  name: "",
+  email: "",
+  password: "",
+  role: "MEMBER" as Role,
+};
 
 export function CreateUserForm() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [validationError, setValidationError] = useState<string | null>(null);
   const mutation = useCreateAdminUserMutation();
 
-  function update<Key extends keyof typeof form>(key: Key, value: (typeof form)[Key]) {
+  function update<Key extends keyof typeof form>(
+    key: Key,
+    value: (typeof form)[Key],
+  ) {
     setForm((current) => ({ ...current, [key]: value }));
     setValidationError(null);
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (form.name.trim() === "" || form.email.trim() === "" || form.password.length < 8) {
-      setValidationError("Name, email, and a password of at least 8 characters are required.");
+    if (
+      form.name.trim() === "" ||
+      form.email.trim() === "" ||
+      form.password.length < 8
+    ) {
+      setValidationError(
+        "Name, email, and a password of at least 8 characters are required.",
+      );
       return;
     }
     mutation.mutate(
@@ -84,16 +97,8 @@ export function CreateUserForm() {
       </div>
 
       {validationError ? (
-        <p className="text-sm text-red-600 dark:text-red-400">{validationError}</p>
-      ) : null}
-      {mutation.isError ? (
-        <p role="alert" className="text-sm text-red-700 dark:text-red-300">
-          {describeError(mutation.error)}
-        </p>
-      ) : null}
-      {mutation.isSuccess ? (
-        <p role="status" className="text-sm text-green-700 dark:text-green-400">
-          User created.
+        <p className="text-sm text-red-600 dark:text-red-400">
+          {validationError}
         </p>
       ) : null}
 
