@@ -1,5 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { getReportVersionHistory, type ReportVersionHistoryItem } from "@/lib/api/reports";
+import {
+  getReportVersionHistory,
+  type ReportVersionHistoryItem,
+} from "@/lib/api/reports";
 
 /**
  * Version history for one report, newest-first. Pass `enabled: false` when the caller doesn't

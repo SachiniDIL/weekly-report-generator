@@ -1,4 +1,7 @@
-import type { ReportVersionHistoryItem, ReviewCommentView } from "@/lib/api/reports";
+import type {
+  ReportVersionHistoryItem,
+  ReviewCommentView,
+} from "@/lib/api/reports";
 
 /**
  * The comment a member needs to see while fixing a NEEDS_CORRECTION report lives on the

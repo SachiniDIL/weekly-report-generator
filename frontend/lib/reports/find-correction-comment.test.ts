@@ -1,4 +1,7 @@
-import type { ReportVersionHistoryItem, ReviewCommentView } from "@/lib/api/reports";
+import type {
+  ReportVersionHistoryItem,
+  ReviewCommentView,
+} from "@/lib/api/reports";
 import { findCorrectionComment } from "./find-correction-comment";
 
 const EMPTY_CONTENT = {
@@ -14,7 +17,9 @@ const EMPTY_CONTENT = {
   hoursBreakdown: [],
 };
 
-function item(reviewComment: ReviewCommentView | null): ReportVersionHistoryItem {
+function item(
+  reviewComment: ReviewCommentView | null,
+): ReportVersionHistoryItem {
   return { content: EMPTY_CONTENT, reviewComment };
 }
 
@@ -32,7 +37,10 @@ describe("findCorrectionComment", () => {
   });
 
   it("ignores an APPROVED comment on that version", () => {
-    const history = [item(null), item({ ...CHANGES_REQUESTED, action: "APPROVED" })];
+    const history = [
+      item(null),
+      item({ ...CHANGES_REQUESTED, action: "APPROVED" }),
+    ];
     expect(findCorrectionComment(history)).toBeNull();
   });
 

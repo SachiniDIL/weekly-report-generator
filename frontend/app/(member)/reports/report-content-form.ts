@@ -3,20 +3,12 @@ import type {
   ReportContentResponse,
 } from "@/lib/api/reports";
 
-/** The selectable options for a task entry's priority and status. */
-export const TASK_PRIORITIES = [
-  { value: "HIGH", label: "High" },
-  { value: "MEDIUM", label: "Medium" },
-  { value: "LOW", label: "Low" },
-] as const;
-
-export const TASK_STATUSES = [
-  { value: "NOT_STARTED", label: "Not started" },
-  { value: "IN_PROGRESS", label: "In progress" },
-  { value: "BLOCKED", label: "Blocked" },
-  { value: "IN_REVIEW", label: "In review" },
-  { value: "DONE", label: "Done" },
-] as const;
+// The selectable options for a task entry's priority and status live in lib/ so the read-only
+// report view can share the same labels.
+export {
+  TASK_PRIORITY_OPTIONS as TASK_PRIORITIES,
+  TASK_STATUS_OPTIONS as TASK_STATUSES,
+} from "@/lib/reports/task-fields";
 
 /** Hours are logged against this fixed set of task types — one input per type, nothing to add. */
 export const HOURS_TASK_TYPES = [

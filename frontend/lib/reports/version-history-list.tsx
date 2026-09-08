@@ -1,19 +1,28 @@
-import type { ReportVersionHistoryItem, ReviewCommentView } from "@/lib/api/reports";
+import type {
+  ReportVersionHistoryItem,
+  ReviewCommentView,
+} from "@/lib/api/reports";
 import { ReportContentBody } from "./report-content-view";
 
 /** Prior versions of a report, newest-first, each with the manager comment made against it. */
-export function VersionHistoryList({ versions }: { versions: ReportVersionHistoryItem[] }) {
+export function VersionHistoryList({
+  versions,
+}: {
+  versions: ReportVersionHistoryItem[];
+}) {
   return (
-    <ol className="flex flex-col gap-8">
+    <ol className="flex flex-col gap-4">
       {versions.map((version) => (
         <li
           key={version.content.reportVersionId}
-          className="flex flex-col gap-4 rounded border border-black/10 p-4 dark:border-white/15"
+          className="dusk-panel flex flex-col gap-4 p-4"
         >
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-dusk-muted">
             Version {version.content.versionNo}
           </h3>
-          {version.reviewComment ? <VersionReviewComment comment={version.reviewComment} /> : null}
+          {version.reviewComment ? (
+            <VersionReviewComment comment={version.reviewComment} />
+          ) : null}
           <ReportContentBody content={version.content} />
         </li>
       ))}
@@ -22,13 +31,22 @@ export function VersionHistoryList({ versions }: { versions: ReportVersionHistor
 }
 
 function VersionReviewComment({ comment }: { comment: ReviewCommentView }) {
-  const label = comment.action === "APPROVED" ? "Approved" : "Changes requested";
+  const changesRequested = comment.action === "CHANGES_REQUESTED";
   return (
-    <div className="rounded bg-black/5 p-3 text-sm dark:bg-white/10">
+    <div
+      className={`rounded-lg p-3 text-sm ${
+        changesRequested ? "dusk-banner-error" : "dusk-banner-success"
+      }`}
+    >
       <p className="font-medium">
-        {label} by {comment.managerName}
+        {changesRequested ? "Changes requested" : "Approved"} by{" "}
+        {comment.managerName}
       </p>
-      {comment.comment ? <p className="mt-1 whitespace-pre-wrap">{comment.comment}</p> : null}
+      {comment.comment ? (
+        <p className="mt-1 whitespace-pre-wrap break-words">
+          {comment.comment}
+        </p>
+      ) : null}
     </div>
   );
 }
