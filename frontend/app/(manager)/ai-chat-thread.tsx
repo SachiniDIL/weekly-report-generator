@@ -1,3 +1,4 @@
+import { AiMarkdown } from "@/lib/ai/ai-markdown";
 import type { ChatMessage } from "@/lib/ai/use-ai-chat";
 
 export function AiChatThread({
@@ -24,18 +25,23 @@ export function AiChatThread({
       ) : null}
 
       <ul className="flex flex-col gap-2">
-        {messages.map((message) => (
-          <li
-            key={message.id}
-            className={
-              message.role === "user"
-                ? "max-w-[85%] self-end rounded-lg bg-foreground px-2.5 py-1.5 text-background"
-                : "max-w-[85%] self-start whitespace-pre-wrap rounded-lg border border-white/10 bg-white/[.04] px-2.5 py-1.5 text-dusk-primary"
-            }
-          >
-            {message.text}
-          </li>
-        ))}
+        {messages.map((message) =>
+          message.role === "user" ? (
+            <li
+              key={message.id}
+              className="max-w-[85%] self-end whitespace-pre-wrap rounded-lg bg-foreground px-2.5 py-1.5 text-background"
+            >
+              {message.text}
+            </li>
+          ) : (
+            <li
+              key={message.id}
+              className="max-w-[85%] self-start rounded-lg border border-white/10 bg-white/[.04] px-2.5 py-1.5 text-dusk-primary"
+            >
+              <AiMarkdown text={message.text} />
+            </li>
+          ),
+        )}
       </ul>
 
       {isSending ? (

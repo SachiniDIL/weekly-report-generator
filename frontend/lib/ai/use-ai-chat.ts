@@ -20,7 +20,10 @@ export function useAiChat() {
   const nextId = useRef(0);
 
   const append = (role: ChatMessage["role"], text: string) => {
-    setMessages((current) => [...current, { id: `m${nextId.current++}`, role, text }]);
+    setMessages((current) => [
+      ...current,
+      { id: `m${nextId.current++}`, role, text },
+    ]);
   };
 
   const mutation = useMutation({

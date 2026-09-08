@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { describeError } from "@/lib/api-client";
 import { generateSummary } from "@/lib/api/ai";
+import { AiMarkdown } from "@/lib/ai/ai-markdown";
 
 export function TeamSummaryPanel() {
   const [dismissed, setDismissed] = useState(false);
@@ -38,8 +39,10 @@ export function TeamSummaryPanel() {
       ) : null}
 
       {summary && !dismissed ? (
-        <div className="dusk-banner flex items-start justify-between gap-3 rounded-lg p-3 text-sm">
-          <p className="whitespace-pre-wrap">{summary}</p>
+        <div className="dusk-banner flex items-start justify-between gap-3 rounded-lg p-4 text-sm">
+          <div className="min-w-0 flex-1">
+            <AiMarkdown text={summary} />
+          </div>
           <button
             type="button"
             onClick={() => setDismissed(true)}
