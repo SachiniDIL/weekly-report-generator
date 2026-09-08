@@ -148,7 +148,7 @@ From `backend/`, with the database running:
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-On Windows: `mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local"`
+On Windows: `./mvnw spring-boot:run "-Dspring-boot.run.profiles=local"`
 
 The `local` profile activates `application-local.properties`. On startup Flyway
 creates the schema, and a `LocalAdminSeeder` creates one admin account:
