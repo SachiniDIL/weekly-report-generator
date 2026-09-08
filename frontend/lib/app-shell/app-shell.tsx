@@ -9,8 +9,15 @@ import { Avatar } from "@/lib/avatar";
 import { useAuth } from "@/lib/auth-context";
 import { BrandMark } from "@/lib/brand";
 import { greeting } from "./greeting";
-import { ADMIN_NAV, MANAGER_NAV, MEMBER_NAV, type NavItem } from "./nav-config";
+import {
+  ADMIN_NAV,
+  MANAGER_NAV,
+  MEMBER_NAV,
+  type AppShellVariant,
+  type NavItem,
+} from "./nav-config";
 import { pageTitleForPath } from "./page-title";
+import { useNavBadges, type NavBadge } from "./use-nav-badges";
 
 const NAV_BY_VARIANT: Record<AppShellVariant, NavItem[]> = {
   member: MEMBER_NAV,
@@ -18,7 +25,7 @@ const NAV_BY_VARIANT: Record<AppShellVariant, NavItem[]> = {
   admin: ADMIN_NAV,
 };
 
-export type AppShellVariant = "member" | "manager" | "admin";
+export type { AppShellVariant };
 
 export function AppShell({
   variant,
@@ -30,10 +37,17 @@ export function AppShell({
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const nav = NAV_BY_VARIANT[variant];
+  const badges = useNavBadges(variant);
 
   return (
     <div className="min-h-screen">
-      <Sidebar nav={nav} pathname={pathname} user={user} onSignOut={logout} />
+      <Sidebar
+        nav={nav}
+        badges={badges}
+        pathname={pathname}
+        user={user}
+        onSignOut={logout}
+      />
 
       <div className="flex min-h-screen flex-col md:pl-[220px]">
         <Topbar
@@ -50,11 +64,13 @@ export function AppShell({
 
 function Sidebar({
   nav,
+  badges,
   pathname,
   user,
   onSignOut,
 }: {
   nav: NavItem[];
+  badges: Record<string, NavBadge>;
   pathname: string | null;
   user: AuthUser | null;
   onSignOut: () => void;
@@ -84,7 +100,8 @@ function Sidebar({
               }`}
             >
               <Icon size={16} aria-hidden />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              <NavBadgeMarker badge={badges[item.href]} label={item.label} />
             </Link>
           );
         })}
@@ -93,6 +110,37 @@ function Sidebar({
       {user ? <UserFooter user={user} onSignOut={onSignOut} /> : null}
     </aside>
   );
+}
+
+function NavBadgeMarker({
+  badge,
+  label,
+}: {
+  badge: NavBadge | undefined;
+  label: string;
+}) {
+  if (!badge) {
+    return null;
+  }
+  if (badge.count != null) {
+    return (
+      <span
+        className="dusk-nav-count"
+        aria-label={`${label}: ${badge.count} waiting`}
+      >
+        {badge.count}
+      </span>
+    );
+  }
+  if (badge.dot) {
+    return (
+      <>
+        <span className="dusk-nav-dot" aria-hidden />
+        <span className="sr-only">— changes requested</span>
+      </>
+    );
+  }
+  return null;
 }
 
 function UserFooter({

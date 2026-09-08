@@ -22,6 +22,8 @@ export function useReviewReportMutation(reportId: number) {
     mutationFn: (payload) => reviewReport(reportId, payload),
     onSuccess: (_report, request) => {
       queryClient.invalidateQueries({ queryKey: ["report", reportId] });
+      // Refresh the report lists and the sidebar's review-queue count.
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
       toast.success(
         request.action === "APPROVED"
           ? "Report approved."

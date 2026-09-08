@@ -9,6 +9,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+export type AppShellVariant = "member" | "manager" | "admin";
+
 export interface NavItem {
   href: string;
   label: string;

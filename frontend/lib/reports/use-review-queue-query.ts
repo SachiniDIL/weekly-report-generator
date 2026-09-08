@@ -6,7 +6,7 @@ import {
 } from "@/lib/api/reports";
 
 /** Submitted reports awaiting a manager's review, oldest-week first. */
-export function useReviewQueueQuery() {
+export function useReviewQueueQuery(options: { enabled?: boolean } = {}) {
   return useQuery<Page<ReportListItemView>>({
     queryKey: ["reports", "review-queue"],
     queryFn: () =>
@@ -15,5 +15,6 @@ export function useReviewQueueQuery() {
         size: 100,
         sort: ["weekStart,asc", "id,asc"],
       }),
+    enabled: options.enabled ?? true,
   });
 }

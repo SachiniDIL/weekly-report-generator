@@ -67,6 +67,8 @@ export function useSubmitReportMutation(reportId: number | null) {
     },
     onSuccess: (report) => {
       queryClient.setQueryData(["report", report.id], report);
+      // Refresh the report lists and the sidebar's "changes requested" dot.
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
       toast.success("Report submitted for review.");
       router.replace(`/reports/${report.id}`);
     },
