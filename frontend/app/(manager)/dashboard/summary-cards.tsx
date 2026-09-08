@@ -37,7 +37,7 @@ export function SummaryCards() {
         accent="#4f6ef7"
       />
       <MetricCard
-        label="Compliance rate"
+        label="Compliance this week"
         value={`${Math.round(summary.complianceRate * 100)}%`}
         accent="#2f9e5f"
       />

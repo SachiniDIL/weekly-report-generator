@@ -46,14 +46,14 @@ class DashboardSummaryEndpointIntegrationTest {
 
     private static final String PASSWORD = "correct-horse-battery";
 
-    // "Today" is 2026-06-15 (see the mocked clock). This week fully brackets it; last week has
-    // already ended; next week hasn't started.
-    private static final LocalDate THIS_WEEK_START = LocalDate.of(2026, 6, 14);
-    private static final LocalDate THIS_WEEK_END = LocalDate.of(2026, 6, 20);
-    private static final LocalDate LAST_WEEK_START = LocalDate.of(2026, 6, 7);
-    private static final LocalDate LAST_WEEK_END = LocalDate.of(2026, 6, 13);
-    private static final LocalDate NEXT_WEEK_START = LocalDate.of(2026, 6, 21);
-    private static final LocalDate NEXT_WEEK_END = LocalDate.of(2026, 6, 27);
+    // "Today" is Monday 2026-06-15 (see the mocked clock). The ISO week the dashboard resolves
+    // runs Monday–Sunday, so these are exact week ranges the roster query matches on.
+    private static final LocalDate THIS_WEEK_START = LocalDate.of(2026, 6, 15);
+    private static final LocalDate THIS_WEEK_END = LocalDate.of(2026, 6, 21);
+    private static final LocalDate LAST_WEEK_START = LocalDate.of(2026, 6, 8);
+    private static final LocalDate LAST_WEEK_END = LocalDate.of(2026, 6, 14);
+    private static final LocalDate NEXT_WEEK_START = LocalDate.of(2026, 6, 22);
+    private static final LocalDate NEXT_WEEK_END = LocalDate.of(2026, 6, 28);
 
     @Autowired
     private MockMvc mockMvc;
@@ -126,20 +126,23 @@ class DashboardSummaryEndpointIntegrationTest {
 
     @Test
     void computesEveryMetricAgainstAKnownMixOfReports() throws Exception {
-        // This week (brackets TODAY)
-        Report submittedThisWeek = persistReport(ReportStatus.SUBMITTED, THIS_WEEK_START, THIS_WEEK_END);
-        Report approvedThisWeek = persistReport(ReportStatus.APPROVED, THIS_WEEK_START, THIS_WEEK_END);
-        persistReport(ReportStatus.DRAFT, THIS_WEEK_START, THIS_WEEK_END); // pending — week not over
+        // Four members, one report each for THIS week (brackets TODAY).
+        User memberB = persistUser("Member B", "member-b@example.com", Role.MEMBER);
+        User memberC = persistUser("Member C", "member-c@example.com", Role.MEMBER);
+        User memberD = persistUser("Member D", "member-d@example.com", Role.MEMBER);
+
+        Report submittedThisWeek =
+                persistReport(member, ReportStatus.SUBMITTED, THIS_WEEK_START, THIS_WEEK_END);
+        Report approvedThisWeek =
+                persistReport(memberB, ReportStatus.APPROVED, THIS_WEEK_START, THIS_WEEK_END);
         Report needsCorrectionThisWeek =
-                persistReport(ReportStatus.NEEDS_CORRECTION, THIS_WEEK_START, THIS_WEEK_END);
+                persistReport(memberC, ReportStatus.NEEDS_CORRECTION, THIS_WEEK_START, THIS_WEEK_END);
+        persistReport(memberD, ReportStatus.DRAFT, THIS_WEEK_START, THIS_WEEK_END); // not compliant
 
-        // Last week (already ended)
-        persistReport(ReportStatus.DRAFT, LAST_WEEK_START, LAST_WEEK_END); // late
-        persistReport(ReportStatus.SUBMITTED, LAST_WEEK_START, LAST_WEEK_END);
-        persistReport(ReportStatus.NEEDS_CORRECTION, LAST_WEEK_START, LAST_WEEK_END);
-
-        // Next week (not started) — never counted
-        persistReport(ReportStatus.DRAFT, NEXT_WEEK_START, NEXT_WEEK_END);
+        // Other weeks — irrelevant to this week's compliance, but feed the all-time counts.
+        persistReport(member, ReportStatus.DRAFT, LAST_WEEK_START, LAST_WEEK_END);
+        persistReport(member, ReportStatus.NEEDS_CORRECTION, LAST_WEEK_START, LAST_WEEK_END);
+        persistReport(member, ReportStatus.DRAFT, NEXT_WEEK_START, NEXT_WEEK_END);
 
         // Blockers: current-version only, and only on not-yet-APPROVED reports.
         addCurrentVersionWithBlockers(submittedThisWeek, 2);
@@ -151,22 +154,33 @@ class DashboardSummaryEndpointIntegrationTest {
                 .andExpect(jsonPath("$.totalSubmittedThisWeek").value(3))
                 .andExpect(jsonPath("$.needsCorrectionCount").value(2))
                 .andExpect(jsonPath("$.openBlockersCount").value(3))
-                // submitted = 5 (SUBMITTED/APPROVED/NEEDS_CORRECTION this week + SUBMITTED/NEEDS_CORRECTION last week)
-                // late = 1 (DRAFT last week); rate = 5 / 6
-                .andExpect(jsonPath("$.complianceRate").value(closeTo(5.0 / 6.0, 1e-9)));
+                // 3 of 4 members turned something in for this week (SUBMITTED / APPROVED /
+                // NEEDS_CORRECTION); memberD only has a DRAFT.
+                .andExpect(jsonPath("$.complianceRate").value(closeTo(0.75, 1e-9)));
     }
 
     @Test
-    void reportsFullComplianceWhenNothingIsDueYet() throws Exception {
-        persistReport(ReportStatus.DRAFT, THIS_WEEK_START, THIS_WEEK_END);
-        persistReport(ReportStatus.DRAFT, NEXT_WEEK_START, NEXT_WEEK_END);
+    void aMemberWithOnlyADraftOrNoReportThisWeekIsNotCompliant() throws Exception {
+        User memberB = persistUser("Member B", "member-b@example.com", Role.MEMBER);
+
+        persistReport(member, ReportStatus.SUBMITTED, THIS_WEEK_START, THIS_WEEK_END);
+        persistReport(memberB, ReportStatus.DRAFT, THIS_WEEK_START, THIS_WEEK_END);
+        // A third member with no report at all this week — also non-compliant.
+        persistUser("Member C", "member-c@example.com", Role.MEMBER);
 
         mockMvc.perform(get("/dashboard/summary").header("Authorization", bearer(manager)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.complianceRate").value(1.0))
-                .andExpect(jsonPath("$.totalSubmittedThisWeek").value(0))
-                .andExpect(jsonPath("$.needsCorrectionCount").value(0))
-                .andExpect(jsonPath("$.openBlockersCount").value(0));
+                .andExpect(jsonPath("$.complianceRate").value(closeTo(1.0 / 3.0, 1e-9)))
+                .andExpect(jsonPath("$.totalSubmittedThisWeek").value(1));
+    }
+
+    @Test
+    void complianceIsReportedAsFullWhenTheTeamHasNoMembers() throws Exception {
+        userRepository.delete(member);
+
+        mockMvc.perform(get("/dashboard/summary").header("Authorization", bearer(manager)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.complianceRate").value(1.0));
     }
 
     @Test
@@ -196,9 +210,9 @@ class DashboardSummaryEndpointIntegrationTest {
         persistBlocker(current.getId());
     }
 
-    private Report persistReport(ReportStatus status, LocalDate weekStart, LocalDate weekEnd) {
+    private Report persistReport(User user, ReportStatus status, LocalDate weekStart, LocalDate weekEnd) {
         Report report = new Report();
-        report.setUser(member);
+        report.setUser(user);
         report.setProject(project);
         report.setStatus(status);
         report.setWeekStart(weekStart);

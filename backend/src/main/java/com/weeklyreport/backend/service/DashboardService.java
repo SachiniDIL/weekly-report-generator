@@ -2,11 +2,10 @@ package com.weeklyreport.backend.service;
 
 import com.weeklyreport.backend.domain.ReportStatus;
 import com.weeklyreport.backend.dto.DashboardSummaryResponse;
+import com.weeklyreport.backend.dto.MemberWeekStatus;
 import com.weeklyreport.backend.repository.BlockerRepository;
 import com.weeklyreport.backend.repository.ReportRepository;
-import java.time.Clock;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,40 +18,57 @@ public class DashboardService {
 
     private final ReportRepository reportRepository;
     private final BlockerRepository blockerRepository;
-    private final Clock clock;
+    private final DashboardCalendar calendar;
+    private final TeamRosterForWeek teamRoster;
 
     public DashboardService(
-            ReportRepository reportRepository, BlockerRepository blockerRepository, Clock clock) {
+            ReportRepository reportRepository,
+            BlockerRepository blockerRepository,
+            DashboardCalendar calendar,
+            TeamRosterForWeek teamRoster) {
         this.reportRepository = reportRepository;
         this.blockerRepository = blockerRepository;
-        this.clock = clock;
+        this.calendar = calendar;
+        this.teamRoster = teamRoster;
     }
 
     @Transactional(readOnly = true)
     public DashboardSummaryResponse getSummary() {
-        LocalDate today = LocalDate.ofInstant(clock.instant(), ZoneOffset.UTC);
+        DashboardCalendar.WeekRange week = calendar.resolveWeek(null, null);
 
         long totalSubmittedThisWeek =
                 reportRepository.countByStatusNotAndWeekStartLessThanEqualAndWeekEndGreaterThanEqual(
-                        ReportStatus.DRAFT, today, today);
+                        ReportStatus.DRAFT, calendar.today(), calendar.today());
         long needsCorrectionCount = reportRepository.countByStatus(ReportStatus.NEEDS_CORRECTION);
         long openBlockersCount =
                 blockerRepository.countOnCurrentVersionsOfReportsNotInStatus(ReportStatus.APPROVED);
 
         return new DashboardSummaryResponse(
-                totalSubmittedThisWeek, complianceRate(today), needsCorrectionCount, openBlockersCount);
+                totalSubmittedThisWeek,
+                weeklySubmissionCompliance(week),
+                needsCorrectionCount,
+                openBlockersCount);
     }
 
     /**
-     * Submitted work against missed deadlines. A DRAFT whose week hasn't ended yet counts
-     * neither way — no deadline has been missed. With nothing submitted or overdue, compliance
-     * is reported as full.
+     * This week's submission compliance: the fraction of active members who have turned in a
+     * report for the current week — one whose status is SUBMITTED, NEEDS_CORRECTION or APPROVED.
+     * A member with only a DRAFT this week, or no report at all, counts as non-compliant. Reported
+     * as 1.0 when there are no members.
      */
-    private double complianceRate(LocalDate today) {
-        long submitted =
-                reportRepository.countByStatusNotAndWeekStartLessThanEqual(ReportStatus.DRAFT, today);
-        long late = reportRepository.countByStatusAndWeekEndLessThan(ReportStatus.DRAFT, today);
-        long total = submitted + late;
-        return total == 0 ? 1.0 : (double) submitted / total;
+    private double weeklySubmissionCompliance(DashboardCalendar.WeekRange week) {
+        List<TeamRosterForWeek.MemberWeek> roster = teamRoster.forWeek(week.start(), week.end());
+        if (roster.isEmpty()) {
+            return 1.0;
+        }
+        long submitted = roster.stream().filter(member -> hasSubmitted(member.status())).count();
+        return (double) submitted / roster.size();
+    }
+
+    private static boolean hasSubmitted(MemberWeekStatus status) {
+        return switch (status) {
+            case NOT_STARTED, DRAFT -> false;
+            case NEEDS_CORRECTION, SUBMITTED, APPROVED -> true;
+        };
     }
 }
