@@ -1,11 +1,13 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { setAuthToken } from "@/lib/api-client";
 import type { ReportResponse } from "@/lib/api/reports";
 import { renderWithQueryClient } from "@/lib/test-render";
 import EditReportPage from "./page";
 
+const replaceMock = jest.fn();
+
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), replace: replaceMock }),
   useParams: () => ({ id: "7" }),
 }));
 
@@ -64,6 +66,7 @@ describe("EditReportPage", () => {
   beforeEach(() => {
     global.fetch = fetchMock as unknown as typeof fetch;
     fetchMock.mockReset();
+    replaceMock.mockReset();
     setAuthToken(null);
   });
 
@@ -95,7 +98,50 @@ describe("EditReportPage", () => {
 
     expect(await screen.findByDisplayValue("Wire up auth")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Halfway there")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Save draft" })).toBeInTheDocument();
+    // Save draft is offered at the top and bottom of the form.
+    expect(screen.getAllByRole("button", { name: "Save draft" })).toHaveLength(
+      2,
+    );
+  });
+
+  it("asks for confirmation before submitting for review", async () => {
+    const draft = report({
+      status: "DRAFT",
+      content: { ...EMPTY_CONTENT, notes: "Ready" },
+    });
+    fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+      if (url.endsWith("/reports/7/versions"))
+        return Promise.resolve(jsonResponse(200, []));
+      if (url.endsWith("/reports/7/submit") && init?.method === "POST") {
+        return Promise.resolve(
+          jsonResponse(200, report({ status: "SUBMITTED" })),
+        );
+      }
+      if (url.endsWith("/reports/7") && init?.method === "PUT") {
+        return Promise.resolve(jsonResponse(200, draft));
+      }
+      if (url.endsWith("/reports/7"))
+        return Promise.resolve(jsonResponse(200, draft));
+      throw new Error(`unexpected request: ${url}`);
+    });
+
+    renderWithQueryClient(<EditReportPage />);
+    await screen.findByDisplayValue("Ready");
+
+    fireEvent.click(screen.getByRole("button", { name: "Submit for review" }));
+
+    const dialog = await screen.findByRole("alertdialog");
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Submit for review" }),
+    );
+
+    await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/reports/7"));
+    expect(
+      fetchMock.mock.calls.some(
+        ([url, init]) =>
+          url.endsWith("/reports/7/submit") && init?.method === "POST",
+      ),
+    ).toBe(true);
   });
 
   it("shows the manager's correction comment for a NEEDS_CORRECTION report", async () => {
@@ -122,13 +168,20 @@ describe("EditReportPage", () => {
 
   it("renders a SUBMITTED report read-only, with no editing controls", async () => {
     respondWith(
-      report({ status: "SUBMITTED", content: { ...EMPTY_CONTENT, tasksPlannedNext: "Ship the API" } }),
+      report({
+        status: "SUBMITTED",
+        content: { ...EMPTY_CONTENT, tasksPlannedNext: "Ship the API" },
+      }),
     );
 
     renderWithQueryClient(<EditReportPage />);
 
     expect(await screen.findByText("Ship the API")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Save draft" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Submit for review" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Save draft" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Submit for review" }),
+    ).not.toBeInTheDocument();
   });
 });

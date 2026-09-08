@@ -3,6 +3,29 @@ import type {
   ReportContentResponse,
 } from "@/lib/api/reports";
 
+/** The selectable options for a task entry's priority and status. */
+export const TASK_PRIORITIES = [
+  { value: "HIGH", label: "High" },
+  { value: "MEDIUM", label: "Medium" },
+  { value: "LOW", label: "Low" },
+] as const;
+
+export const TASK_STATUSES = [
+  { value: "NOT_STARTED", label: "Not started" },
+  { value: "IN_PROGRESS", label: "In progress" },
+  { value: "BLOCKED", label: "Blocked" },
+  { value: "IN_REVIEW", label: "In review" },
+  { value: "DONE", label: "Done" },
+] as const;
+
+/** Hours are logged against this fixed set of task types — one input per type, nothing to add. */
+export const HOURS_TASK_TYPES = [
+  "Development",
+  "Testing",
+  "Meetings",
+  "Documentation",
+] as const;
+
 // Numeric inputs are held as strings while editing (empty stays empty, no NaN) and parsed on save.
 export interface TaskEntryRow {
   key: string;
@@ -59,8 +82,17 @@ export function emptyReportContentForm(): ReportContentForm {
     taskEntries: [],
     blockers: [],
     achievements: [],
-    hours: [],
+    hours: defaultHoursRows(),
   };
+}
+
+/** The fixed hours rows — one per task type, hours empty. */
+export function defaultHoursRows(): HoursRow[] {
+  return HOURS_TASK_TYPES.map((taskType) => ({
+    key: nextRowKey(),
+    taskType,
+    hours: "",
+  }));
 }
 
 export function emptyTaskEntryRow(): TaskEntryRow {
@@ -85,11 +117,9 @@ export function emptyAchievementRow(): AchievementRow {
   return { key: nextRowKey(), description: "", isKeyHighlight: false };
 }
 
-export function emptyHoursRow(): HoursRow {
-  return { key: nextRowKey(), taskType: "", hours: "" };
-}
-
-export function reportContentFormFromResponse(content: ReportContentResponse): ReportContentForm {
+export function reportContentFormFromResponse(
+  content: ReportContentResponse,
+): ReportContentForm {
   return {
     tasksPlannedNext: content.tasksPlannedNext ?? "",
     notes: content.notes ?? "",
@@ -115,15 +145,27 @@ export function reportContentFormFromResponse(content: ReportContentResponse): R
       description: achievement.description,
       isKeyHighlight: achievement.isKeyHighlight,
     })),
-    hours: content.hoursBreakdown.map((row) => ({
-      key: nextRowKey(),
-      taskType: row.taskType,
-      hours: String(row.hours),
-    })),
+    hours: hoursRowsFromResponse(content.hoursBreakdown),
   };
 }
 
-export function toReportContentRequest(form: ReportContentForm): ReportContentRequest {
+/** Load the fixed hours rows, filling each type's input from a matching saved entry. */
+function hoursRowsFromResponse(
+  breakdown: ReportContentResponse["hoursBreakdown"],
+): HoursRow[] {
+  const byType = new Map(
+    breakdown.map((row) => [row.taskType, String(row.hours)]),
+  );
+  return HOURS_TASK_TYPES.map((taskType) => ({
+    key: nextRowKey(),
+    taskType,
+    hours: byType.get(taskType) ?? "",
+  }));
+}
+
+export function toReportContentRequest(
+  form: ReportContentForm,
+): ReportContentRequest {
   return {
     tasksPlannedNext: emptyToNull(form.tasksPlannedNext),
     notes: emptyToNull(form.notes),
@@ -146,10 +188,12 @@ export function toReportContentRequest(form: ReportContentForm): ReportContentRe
       description: row.description.trim(),
       isKeyHighlight: row.isKeyHighlight,
     })),
-    hoursBreakdown: form.hours.map((row) => ({
-      taskType: row.taskType.trim(),
-      hours: Number(row.hours),
-    })),
+    hoursBreakdown: form.hours
+      .filter((row) => row.hours.trim() !== "")
+      .map((row) => ({
+        taskType: row.taskType.trim(),
+        hours: Number(row.hours),
+      })),
   };
 }
 
@@ -195,7 +239,11 @@ export function validateReportContentForm(
     if (!identity.weekEnd) {
       problems.push("Set the week end date.");
     }
-    if (identity.weekStart && identity.weekEnd && identity.weekEnd < identity.weekStart) {
+    if (
+      identity.weekStart &&
+      identity.weekEnd &&
+      identity.weekEnd < identity.weekStart
+    ) {
       problems.push("The week end date can't be before the week start date.");
     }
   }
@@ -218,9 +266,10 @@ export function validateReportContentForm(
     }
   });
 
-  form.hours.forEach((row, index) => {
-    if (!row.taskType.trim() || row.hours.trim() === "" || Number.isNaN(Number(row.hours))) {
-      problems.push(`Hours row ${index + 1} needs a task type and a numeric hours value.`);
+  form.hours.forEach((row) => {
+    const value = row.hours.trim();
+    if (value !== "" && (Number.isNaN(Number(value)) || Number(value) < 0)) {
+      problems.push(`Hours for ${row.taskType} must be a non-negative number.`);
     }
   });
 

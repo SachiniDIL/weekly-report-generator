@@ -5,7 +5,11 @@ import { renderWithQueryClient } from "@/lib/test-render";
 import ReportHistoryPage from "./page";
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn() }),
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+  }),
 }));
 
 function jsonResponse(status: number, body: unknown): Response {
@@ -74,7 +78,10 @@ describe("ReportHistoryPage", () => {
     expect(screen.getByText("Needs correction")).toBeInTheDocument();
     expect(screen.getByText("Approved")).toBeInTheDocument();
 
-    expect(screen.getByText("Zephyr").closest("a")).toHaveAttribute("href", "/reports/2");
+    expect(screen.getByText("Zephyr").closest("a")).toHaveAttribute(
+      "href",
+      "/reports/2",
+    );
   });
 
   it("shows a Create new report link", async () => {
@@ -83,10 +90,9 @@ describe("ReportHistoryPage", () => {
     renderWithQueryClient(<ReportHistoryPage />);
     await screen.findByText("Draft");
 
-    expect(screen.getByRole("link", { name: "Create new report" })).toHaveAttribute(
-      "href",
-      "/reports/new",
-    );
+    expect(
+      screen.getByRole("link", { name: "Create new report" }),
+    ).toHaveAttribute("href", "/reports/new");
   });
 
   it("renders a friendly empty state with zero reports", async () => {
@@ -94,9 +100,15 @@ describe("ReportHistoryPage", () => {
 
     renderWithQueryClient(<ReportHistoryPage />);
 
-    expect(await screen.findByText(/haven't written any reports yet/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Create new report" })).toBeInTheDocument();
-    expect(screen.queryByRole("navigation", { name: "Pagination" })).not.toBeInTheDocument();
+    expect(
+      await screen.findByText(/haven't written any reports yet/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Create new report" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", { name: "Pagination" }),
+    ).not.toBeInTheDocument();
   });
 
   it("pages forward through more than one page of results", async () => {
@@ -105,13 +117,21 @@ describe("ReportHistoryPage", () => {
       return Promise.resolve(
         jsonResponse(
           200,
-          pageOf([item({ id: onSecondPage ? 2 : 1, projectName: onSecondPage ? "Week B" : "Week A" })], {
-            totalPages: 2,
-            totalElements: 2,
-            number: onSecondPage ? 1 : 0,
-            first: !onSecondPage,
-            last: onSecondPage,
-          }),
+          pageOf(
+            [
+              item({
+                id: onSecondPage ? 2 : 1,
+                projectName: onSecondPage ? "Week B" : "Week A",
+              }),
+            ],
+            {
+              totalPages: 2,
+              totalElements: 2,
+              number: onSecondPage ? 1 : 0,
+              first: !onSecondPage,
+              last: onSecondPage,
+            },
+          ),
         ),
       );
     });
@@ -126,7 +146,11 @@ describe("ReportHistoryPage", () => {
     expect(await screen.findByText("Week B")).toBeInTheDocument();
     expect(screen.getByText("Page 2 of 2")).toBeInTheDocument();
     await waitFor(() =>
-      expect(fetchMock.mock.calls.some(([requestUrl]) => requestUrl.includes("page=1"))).toBe(true),
+      expect(
+        fetchMock.mock.calls.some(([requestUrl]) =>
+          requestUrl.includes("page=1"),
+        ),
+      ).toBe(true),
     );
   });
 });

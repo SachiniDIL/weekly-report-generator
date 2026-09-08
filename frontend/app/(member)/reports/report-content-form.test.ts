@@ -1,6 +1,7 @@
 import type { ReportContentResponse } from "@/lib/api/reports";
 import {
   emptyReportContentForm,
+  HOURS_TASK_TYPES,
   reportContentFormFromResponse,
   setExclusiveFlag,
   toReportContentRequest,
@@ -18,17 +19,32 @@ function blockers(...checked: boolean[]): BlockerRow[] {
 
 describe("setExclusiveFlag", () => {
   it("checking a row clears the flag on every other row", () => {
-    const result = setExclusiveFlag(blockers(false, false, false), "k1", "isKeyIssue", true);
+    const result = setExclusiveFlag(
+      blockers(false, false, false),
+      "k1",
+      "isKeyIssue",
+      true,
+    );
     expect(result.map((row) => row.isKeyIssue)).toEqual([false, true, false]);
   });
 
   it("moving the flag to a different row unchecks the previous one", () => {
-    const first = setExclusiveFlag(blockers(false, true, false), "k0", "isKeyIssue", true);
+    const first = setExclusiveFlag(
+      blockers(false, true, false),
+      "k0",
+      "isKeyIssue",
+      true,
+    );
     expect(first.map((row) => row.isKeyIssue)).toEqual([true, false, false]);
   });
 
   it("unchecking a row leaves the others untouched", () => {
-    const result = setExclusiveFlag(blockers(true, false, false), "k0", "isKeyIssue", false);
+    const result = setExclusiveFlag(
+      blockers(true, false, false),
+      "k0",
+      "isKeyIssue",
+      false,
+    );
     expect(result.map((row) => row.isKeyIssue)).toEqual([false, false, false]);
   });
 });
@@ -65,7 +81,10 @@ describe("toReportContentRequest", () => {
       timeSpent: null,
       deliverable: null,
     });
-    expect(request.hoursBreakdown?.[0]).toEqual({ taskType: "DEV", hours: 4.5 });
+    expect(request.hoursBreakdown?.[0]).toEqual({
+      taskType: "DEV",
+      hours: 4.5,
+    });
   });
 });
 
@@ -93,18 +112,82 @@ describe("reportContentFormFromResponse", () => {
       ],
       blockers: [{ id: 20, description: "waiting", isKeyIssue: true }],
       achievements: [{ id: 30, description: "shipped", isKeyHighlight: false }],
-      hoursBreakdown: [{ id: 40, taskType: "REVIEW", hours: 2 }],
+      hoursBreakdown: [{ id: 40, taskType: "Testing", hours: 2 }],
     };
 
-    const request = toReportContentRequest(reportContentFormFromResponse(content));
+    const request = toReportContentRequest(
+      reportContentFormFromResponse(content),
+    );
 
     expect(request.tasksPlannedNext).toBe("next things");
     expect(request.notes).toBeNull();
-    expect(request.taskEntries?.[0]).toMatchObject({ taskName: "Task", timePlanned: null, timeSpent: 3 });
-    expect(request.blockers).toEqual([{ description: "waiting", isKeyIssue: true }]);
-    expect(request.hoursBreakdown).toEqual([{ taskType: "REVIEW", hours: 2 }]);
+    expect(request.taskEntries?.[0]).toMatchObject({
+      taskName: "Task",
+      timePlanned: null,
+      timeSpent: 3,
+    });
+    expect(request.blockers).toEqual([
+      { description: "waiting", isKeyIssue: true },
+    ]);
+    expect(request.hoursBreakdown).toEqual([{ taskType: "Testing", hours: 2 }]);
   });
 });
+
+describe("hours breakdown", () => {
+  it("a new form starts with one row per fixed task type, all blank", () => {
+    const form = emptyReportContentForm();
+    expect(form.hours.map((row) => row.taskType)).toEqual([
+      ...HOURS_TASK_TYPES,
+    ]);
+    expect(form.hours.every((row) => row.hours === "")).toBe(true);
+  });
+
+  it("only rows with an entered value are sent", () => {
+    const form = emptyReportContentForm();
+    form.hours[0].hours = "8";
+    form.hours[2].hours = "2.5";
+
+    expect(toReportContentRequest(form).hoursBreakdown).toEqual([
+      { taskType: HOURS_TASK_TYPES[0], hours: 8 },
+      { taskType: HOURS_TASK_TYPES[2], hours: 2.5 },
+    ]);
+  });
+
+  it("loading fills each fixed type's input from a matching saved entry", () => {
+    const form = reportContentFormFromResponse({
+      ...blankResponse(),
+      hoursBreakdown: [{ id: 1, taskType: "Testing", hours: 4 }],
+    });
+    const testing = form.hours.find((row) => row.taskType === "Testing");
+    expect(testing?.hours).toBe("4");
+    expect(form.hours.filter((row) => row.hours !== "")).toHaveLength(1);
+  });
+
+  it("flags a negative or non-numeric entered value", () => {
+    const form = emptyReportContentForm();
+    form.hours[0].hours = "-3";
+    form.hours[1].hours = "abc";
+    expect(validateReportContentForm(form)).toEqual([
+      `Hours for ${HOURS_TASK_TYPES[0]} must be a non-negative number.`,
+      `Hours for ${HOURS_TASK_TYPES[1]} must be a non-negative number.`,
+    ]);
+  });
+});
+
+function blankResponse(): ReportContentResponse {
+  return {
+    reportVersionId: 1,
+    versionNo: 1,
+    submittedAt: "2026-09-05T00:00:00Z",
+    tasksPlannedNext: null,
+    notes: null,
+    links: null,
+    taskEntries: [],
+    blockers: [],
+    achievements: [],
+    hoursBreakdown: [],
+  };
+}
 
 describe("validateReportContentForm", () => {
   it("flags an incomplete task entry", () => {
@@ -122,7 +205,9 @@ describe("validateReportContentForm", () => {
         deliverable: "",
       },
     ];
-    expect(validateReportContentForm(form)).toEqual(["Task 1 needs a name, priority, and status."]);
+    expect(validateReportContentForm(form)).toEqual([
+      "Task 1 needs a name, priority, and status.",
+    ]);
   });
 
   it("flags missing identity fields in create mode", () => {

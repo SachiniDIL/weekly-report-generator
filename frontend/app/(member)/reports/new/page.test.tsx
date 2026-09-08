@@ -52,7 +52,9 @@ describe("NewReportPage", () => {
     fetchMock.mockImplementation((url: string, init: RequestInit) => {
       if (url.includes("/projects")) {
         return Promise.resolve(
-          jsonResponse(200, [{ id: 5, name: "Apollo", description: null, active: true }]),
+          jsonResponse(200, [
+            { id: 5, name: "Apollo", description: null, active: true },
+          ]),
         );
       }
       if (url.endsWith("/reports") && init.method === "POST") {
@@ -66,19 +68,38 @@ describe("NewReportPage", () => {
     renderWithQueryClient(<NewReportPage />);
     await screen.findByText("New weekly report");
 
-    fireEvent.change(screen.getByLabelText("Project"), { target: { value: "5" } });
-    fireEvent.change(screen.getByLabelText("Week start"), { target: { value: "2026-09-01" } });
-    fireEvent.change(screen.getByLabelText("Week end"), { target: { value: "2026-09-05" } });
-    fireEvent.change(screen.getByLabelText("Notes"), { target: { value: "Kicked off" } });
+    fireEvent.change(screen.getByLabelText("Project"), {
+      target: { value: "5" },
+    });
+    fireEvent.change(screen.getByLabelText("Week start"), {
+      target: { value: "2026-09-01" },
+    });
+    fireEvent.change(screen.getByLabelText("Week end"), {
+      target: { value: "2026-09-05" },
+    });
+    fireEvent.change(screen.getByLabelText("Notes"), {
+      target: { value: "Kicked off" },
+    });
 
     fireEvent.click(screen.getByRole("button", { name: "Add task" }));
-    fireEvent.change(screen.getByLabelText("Task name"), { target: { value: "Design schema" } });
-    fireEvent.change(screen.getByLabelText("Priority"), { target: { value: "HIGH" } });
-    fireEvent.change(screen.getByLabelText("Status"), { target: { value: "IN_PROGRESS" } });
+    fireEvent.change(screen.getByLabelText("Task name"), {
+      target: { value: "Design schema" },
+    });
+    fireEvent.change(screen.getByLabelText("Priority"), {
+      target: { value: "HIGH" },
+    });
+    fireEvent.change(screen.getByLabelText("Status"), {
+      target: { value: "IN_PROGRESS" },
+    });
+    fireEvent.change(screen.getByLabelText("Hours for Development"), {
+      target: { value: "6" },
+    });
 
-    fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Save draft" })[0]);
 
-    await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/reports/99"));
+    await waitFor(() =>
+      expect(replaceMock).toHaveBeenCalledWith("/reports/99"),
+    );
 
     const postCall = fetchMock.mock.calls.find(
       ([url, init]) => url.endsWith("/reports") && init.method === "POST",
@@ -90,7 +111,14 @@ describe("NewReportPage", () => {
       weekEnd: "2026-09-05",
       content: {
         notes: "Kicked off",
-        taskEntries: [{ taskName: "Design schema", priority: "HIGH", status: "IN_PROGRESS" }],
+        taskEntries: [
+          {
+            taskName: "Design schema",
+            priority: "HIGH",
+            status: "IN_PROGRESS",
+          },
+        ],
+        hoursBreakdown: [{ taskType: "Development", hours: 6 }],
       },
     });
   });
@@ -99,11 +127,13 @@ describe("NewReportPage", () => {
     renderWithQueryClient(<NewReportPage />);
     await screen.findByText("New weekly report");
 
-    fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Save draft" })[0]);
 
     expect(await screen.findByText("Choose a project.")).toBeInTheDocument();
     expect(
-      fetchMock.mock.calls.some(([url, init]) => url.endsWith("/reports") && init.method === "POST"),
+      fetchMock.mock.calls.some(
+        ([url, init]) => url.endsWith("/reports") && init.method === "POST",
+      ),
     ).toBe(false);
   });
 });

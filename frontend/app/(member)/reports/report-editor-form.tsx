@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { describeError } from "@/lib/api-client";
 import type { ProjectResponse } from "@/lib/api/projects";
+import { useConfirm } from "@/lib/confirm-dialog";
 import {
   toReportContentRequest,
   validateReportContentForm,
@@ -44,13 +45,13 @@ export function ReportEditorForm({
   initialContent: ReportContentForm;
 }) {
   const content = useReportContentForm(initialContent);
+  const confirm = useConfirm();
   const [draftIdentity, setDraftIdentity] = useState<ReportIdentityDraft>({
     projectId: null,
     weekStart: "",
     weekEnd: "",
   });
   const [problems, setProblems] = useState<string[]>([]);
-  const [confirmingSubmit, setConfirmingSubmit] = useState(false);
 
   const saveDraft = useSaveReportDraftMutation(reportId);
   const submit = useSubmitReportMutation(reportId);
@@ -82,9 +83,17 @@ export function ReportEditorForm({
     }
   }
 
-  function handleConfirmSubmit() {
-    setConfirmingSubmit(false);
-    if (passesValidation()) {
+  async function handleSubmit() {
+    if (!passesValidation()) {
+      return;
+    }
+    const confirmed = await confirm({
+      title: "Submit this report?",
+      message:
+        "Once submitted, a manager reviews it and you can't edit it until they respond.",
+      confirmLabel: "Submit for review",
+    });
+    if (confirmed) {
       submit.mutate(currentValues());
     }
   }
@@ -108,32 +117,52 @@ export function ReportEditorForm({
         />
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TextArea
-          id="report-tasks-planned-next"
-          label="Planned for next week"
-          className="sm:col-span-2"
-          value={content.form.tasksPlannedNext}
-          onChange={(value) => content.setText("tasksPlannedNext", value)}
-        />
-        <TextArea
-          id="report-notes"
-          label="Notes"
-          value={content.form.notes}
-          onChange={(value) => content.setText("notes", value)}
-        />
-        <Field
-          id="report-links"
-          label="Links"
-          value={content.form.links}
-          onChange={(value) => content.setText("links", value)}
-        />
-      </div>
+      <ActionBar
+        onSaveDraft={handleSaveDraft}
+        onSubmit={handleSubmit}
+        savingDraft={saveDraft.isPending}
+        submitting={submit.isPending}
+        disabled={pending}
+        showSubmit={false}
+      />
 
-      <TaskEntriesFieldset controls={content.taskEntries} />
-      <BlockersFieldset controls={content.blockers} />
-      <AchievementsFieldset controls={content.achievements} />
-      <HoursFieldset controls={content.hours} />
+      <div className="flex flex-col gap-6">
+        <TaskEntriesFieldset controls={content.taskEntries} />
+        <BlockersFieldset controls={content.blockers} />
+        <AchievementsFieldset controls={content.achievements} />
+        <HoursFieldset controls={content.hours} />
+
+        <section className="flex flex-col gap-3" aria-label="Notes and links">
+          <h2 className="dusk-section-heading">Notes &amp; links</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <TextArea
+              id="report-notes"
+              label="Notes"
+              value={content.form.notes}
+              onChange={(value) => content.setText("notes", value)}
+            />
+            <Field
+              id="report-links"
+              label="Links"
+              value={content.form.links}
+              onChange={(value) => content.setText("links", value)}
+            />
+          </div>
+        </section>
+
+        <section
+          className="flex flex-col gap-3"
+          aria-label="Planned for next week"
+        >
+          <h2 className="dusk-section-heading">Planned for next week</h2>
+          <TextArea
+            id="report-tasks-planned-next"
+            label="What's planned for next week"
+            value={content.form.tasksPlannedNext}
+            onChange={(value) => content.setText("tasksPlannedNext", value)}
+          />
+        </section>
+      </div>
 
       {problems.length > 0 ? (
         <ul
@@ -152,55 +181,58 @@ export function ReportEditorForm({
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-3">
+      <ActionBar
+        onSaveDraft={handleSaveDraft}
+        onSubmit={handleSubmit}
+        savingDraft={saveDraft.isPending}
+        submitting={submit.isPending}
+        disabled={pending}
+        showSubmit
+      />
+    </form>
+  );
+}
+
+function ActionBar({
+  onSaveDraft,
+  onSubmit,
+  savingDraft,
+  submitting,
+  disabled,
+  showSubmit,
+}: {
+  onSaveDraft: () => void;
+  onSubmit: () => void;
+  savingDraft: boolean;
+  submitting: boolean;
+  disabled: boolean;
+  showSubmit: boolean;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <button
+        type="button"
+        onClick={onSaveDraft}
+        disabled={disabled}
+        className="dusk-ghost-btn px-4 py-2 text-sm font-medium"
+      >
+        {savingDraft ? "Saving…" : "Save draft"}
+      </button>
+      {showSubmit ? (
         <button
           type="button"
-          onClick={handleSaveDraft}
-          disabled={pending}
-          className="dusk-ghost-btn px-4 py-2 text-sm font-medium"
-        >
-          {saveDraft.isPending ? "Saving…" : "Save draft"}
-        </button>
-        <button
-          type="button"
-          onClick={() => setConfirmingSubmit(true)}
-          disabled={pending}
+          onClick={onSubmit}
+          disabled={disabled}
           className="rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-60"
         >
-          Submit for review
+          {submitting ? "Submitting…" : "Submit for review"}
         </button>
-      </div>
-
-      {confirmingSubmit ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Confirm submit"
-          className="rounded-xl border border-white/20 p-4 text-sm text-dusk-primary"
-        >
-          <p>
-            Once submitted, a manager reviews this report and you can&apos;t
-            edit it until they respond. Submit now?
-          </p>
-          <div className="mt-3 flex gap-3">
-            <button
-              type="button"
-              onClick={() => setConfirmingSubmit(false)}
-              className="dusk-ghost-btn px-3 py-1.5"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleConfirmSubmit}
-              className="rounded-lg bg-foreground px-3 py-1.5 font-medium text-background"
-            >
-              {submit.isPending ? "Submitting…" : "Yes, submit"}
-            </button>
-          </div>
-        </div>
-      ) : null}
-    </form>
+      ) : (
+        <span className="text-xs text-dusk-muted">
+          Your progress is kept once you save a draft.
+        </span>
+      )}
+    </div>
   );
 }
 

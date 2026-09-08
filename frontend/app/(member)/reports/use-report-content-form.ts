@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   emptyAchievementRow,
   emptyBlockerRow,
-  emptyHoursRow,
   emptyTaskEntryRow,
   setExclusiveFlag,
   type AchievementRow,
@@ -21,6 +20,12 @@ export interface RowListControls<Row> {
   update: (key: string, patch: Partial<Row>) => void;
 }
 
+/** A fixed list of rows — the caller can edit each one but not add or remove. */
+export interface FixedRowListControls<Row> {
+  rows: Row[];
+  update: (key: string, patch: Partial<Row>) => void;
+}
+
 /** Adds mutual-exclusivity on top of the generic row list: checking one clears the others. */
 export interface FlaggedRowListControls<Row> extends RowListControls<Row> {
   setExclusive: (key: string, checked: boolean) => void;
@@ -28,16 +33,21 @@ export interface FlaggedRowListControls<Row> extends RowListControls<Row> {
 
 export interface ReportContentFormControls {
   form: ReportContentForm;
-  setText: (field: "tasksPlannedNext" | "notes" | "links", value: string) => void;
+  setText: (
+    field: "tasksPlannedNext" | "notes" | "links",
+    value: string,
+  ) => void;
   taskEntries: RowListControls<TaskEntryRow>;
   blockers: FlaggedRowListControls<BlockerRow>;
   achievements: FlaggedRowListControls<AchievementRow>;
-  hours: RowListControls<HoursRow>;
+  hours: FixedRowListControls<HoursRow>;
 }
 
 type ListUpdater<Row> = (updater: (rows: Row[]) => Row[]) => void;
 
-export function useReportContentForm(initial: ReportContentForm): ReportContentFormControls {
+export function useReportContentForm(
+  initial: ReportContentForm,
+): ReportContentFormControls {
   const [form, setForm] = useState<ReportContentForm>(initial);
 
   const setText: ReportContentFormControls["setText"] = (field, value) => {
@@ -45,18 +55,28 @@ export function useReportContentForm(initial: ReportContentForm): ReportContentF
   };
 
   const setTaskEntries: ListUpdater<TaskEntryRow> = (updater) =>
-    setForm((current) => ({ ...current, taskEntries: updater(current.taskEntries) }));
+    setForm((current) => ({
+      ...current,
+      taskEntries: updater(current.taskEntries),
+    }));
   const setBlockers: ListUpdater<BlockerRow> = (updater) =>
     setForm((current) => ({ ...current, blockers: updater(current.blockers) }));
   const setAchievements: ListUpdater<AchievementRow> = (updater) =>
-    setForm((current) => ({ ...current, achievements: updater(current.achievements) }));
+    setForm((current) => ({
+      ...current,
+      achievements: updater(current.achievements),
+    }));
   const setHours: ListUpdater<HoursRow> = (updater) =>
     setForm((current) => ({ ...current, hours: updater(current.hours) }));
 
   return {
     form,
     setText,
-    taskEntries: buildRowListControls(form.taskEntries, setTaskEntries, emptyTaskEntryRow),
+    taskEntries: buildRowListControls(
+      form.taskEntries,
+      setTaskEntries,
+      emptyTaskEntryRow,
+    ),
     blockers: buildFlaggedRowListControls(
       form.blockers,
       setBlockers,
@@ -69,7 +89,13 @@ export function useReportContentForm(initial: ReportContentForm): ReportContentF
       emptyAchievementRow,
       "isKeyHighlight",
     ),
-    hours: buildRowListControls(form.hours, setHours, emptyHoursRow),
+    hours: {
+      rows: form.hours,
+      update: (key, patch) =>
+        setHours((current) =>
+          current.map((row) => (row.key === key ? { ...row, ...patch } : row)),
+        ),
+    },
   };
 }
 
@@ -81,9 +107,12 @@ function buildRowListControls<Row extends { key: string }>(
   return {
     rows,
     add: () => setRows((current) => [...current, makeRow()]),
-    remove: (key) => setRows((current) => current.filter((row) => row.key !== key)),
+    remove: (key) =>
+      setRows((current) => current.filter((row) => row.key !== key)),
     update: (key, patch) =>
-      setRows((current) => current.map((row) => (row.key === key ? { ...row, ...patch } : row))),
+      setRows((current) =>
+        current.map((row) => (row.key === key ? { ...row, ...patch } : row)),
+      ),
   };
 }
 
