@@ -19,10 +19,17 @@ export function ReportContentView({ report }: { report: ReportResponse }) {
 }
 
 /** Just the content sections of one version — shared by the current-report view and each row of the version history. */
-export function ReportContentBody({ content }: { content: ReportContentResponse }) {
+export function ReportContentBody({
+  content,
+}: {
+  content: ReportContentResponse;
+}) {
   return (
     <div className="flex flex-col gap-6">
-      <TextBlock label="Planned for next week" value={content.tasksPlannedNext} />
+      <TextBlock
+        label="Planned for next week"
+        value={content.tasksPlannedNext}
+      />
       <TextBlock label="Notes" value={content.notes} />
       <TextBlock label="Links" value={content.links} />
 
@@ -32,13 +39,18 @@ export function ReportContentBody({ content }: { content: ReportContentResponse 
         ) : (
           <ul className="flex flex-col gap-2">
             {content.taskEntries.map((entry) => (
-              <li key={entry.id} className="rounded border border-black/10 p-3 text-sm dark:border-white/15">
+              <li
+                key={entry.id}
+                className="rounded border border-black/10 p-3 text-sm dark:border-white/15"
+              >
                 <p className="font-medium">{entry.taskName}</p>
                 <p className="text-gray-500">
-                  {entry.priority} · {entry.status} · planned {entry.plannedPct}% / actual{" "}
-                  {entry.actualPct}%
+                  {entry.priority} · {entry.status} · planned {entry.plannedPct}
+                  % / actual {entry.actualPct}%
                 </p>
-                {entry.deliverable ? <p className="mt-1">{entry.deliverable}</p> : null}
+                {entry.deliverable ? (
+                  <p className="mt-1">{entry.deliverable}</p>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -46,11 +58,19 @@ export function ReportContentBody({ content }: { content: ReportContentResponse 
       </Section>
 
       <Section title="Blockers">
-        <FlaggedList items={content.blockers} flag="isKeyIssue" flagLabel="key issue" />
+        <FlaggedList
+          items={content.blockers}
+          flag="isKeyIssue"
+          flagLabel="key issue"
+        />
       </Section>
 
       <Section title="Achievements">
-        <FlaggedList items={content.achievements} flag="isKeyHighlight" flagLabel="key highlight" />
+        <FlaggedList
+          items={content.achievements}
+          flag="isKeyHighlight"
+          flagLabel="key highlight"
+        />
       </Section>
 
       <Section title="Hours breakdown">
@@ -87,17 +107,27 @@ function FlaggedList<Item extends { id: number; description: string }>({
       {items.map((item) => (
         <li key={item.id}>
           {item.description}
-          {item[flag] ? <span className="ml-2 text-amber-600">({flagLabel})</span> : null}
+          {item[flag] ? (
+            <span className="ml-2 text-amber-600">({flagLabel})</span>
+          ) : null}
         </li>
       ))}
     </ul>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">{title}</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+        {title}
+      </h2>
       {children}
     </section>
   );
@@ -106,8 +136,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function TextBlock({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="flex flex-col gap-1">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">{label}</h2>
-      <p className="whitespace-pre-wrap text-sm">{value ?? "—"}</p>
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+        {label}
+      </h2>
+      <p className="whitespace-pre-wrap break-words text-sm">{value ?? "—"}</p>
     </div>
   );
 }

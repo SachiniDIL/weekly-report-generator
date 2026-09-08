@@ -100,7 +100,7 @@ export function ReportEditorForm({
 
   return (
     <form
-      className="dusk-panel flex flex-col gap-6 p-6"
+      className="dusk-panel flex flex-col gap-6 p-4 sm:p-6"
       onSubmit={(event) => event.preventDefault()}
     >
       {identity.mode === "create" ? (

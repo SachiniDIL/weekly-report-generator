@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { Role } from "@/lib/api-client";
 import { renderWithQueryClient } from "@/lib/test-render";
 import { AppShell } from "./app-shell";
@@ -84,5 +84,51 @@ describe("AppShell sidebar badges", () => {
     expect(
       screen.queryByRole("link", { name: /waiting/ }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("AppShell mobile navigation", () => {
+  beforeEach(() => {
+    mockAuthUser = { id: 1, name: "Tess", role: "MEMBER" };
+    useApi({});
+  });
+
+  it("opens a nav drawer from the menu button with the full nav inside", async () => {
+    renderWithQueryClient(<AppShell variant="member">content</AppShell>);
+    await screen.findByRole("button", { name: "Open menu" });
+
+    expect(
+      screen.queryByRole("dialog", { name: "Menu" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+    const drawer = screen.getByRole("dialog", { name: "Menu" });
+    expect(
+      within(drawer).getByRole("link", { name: /Reports/ }),
+    ).toBeInTheDocument();
+    expect(
+      within(drawer).getByRole("link", { name: /New Report/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("closes the drawer from the close button and with Escape", async () => {
+    renderWithQueryClient(<AppShell variant="member">content</AppShell>);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Open menu" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close menu" }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "Menu" }),
+      ).not.toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+    fireEvent.keyDown(document, { key: "Escape" });
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "Menu" }),
+      ).not.toBeInTheDocument(),
+    );
   });
 });

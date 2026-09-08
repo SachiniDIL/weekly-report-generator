@@ -14,7 +14,7 @@ export function AiChatWidget() {
       {open ? (
         <section
           aria-label="AI assistant"
-          className="flex h-[28rem] w-80 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl border border-white/15 bg-dusk-base"
+          className="flex h-[70vh] max-h-[28rem] w-80 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl border border-white/15 bg-dusk-base"
           style={{
             boxShadow:
               "12px 12px 32px rgba(57, 65, 90, 0.35), -8px -8px 22px #ffffff",

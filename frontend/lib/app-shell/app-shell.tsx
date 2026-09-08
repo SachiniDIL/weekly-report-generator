@@ -1,9 +1,9 @@
 "use client";
 
-import { LogOut } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { AuthUser } from "@/lib/api-client";
 import { Avatar } from "@/lib/avatar";
 import { useAuth } from "@/lib/auth-context";
@@ -38,23 +38,47 @@ export function AppShell({
   const { user, logout } = useAuth();
   const nav = NAV_BY_VARIANT[variant];
   const badges = useNavBadges(variant);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // Close the mobile drawer whenever the route changes.
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [pathname]);
+
+  const sidebar = (
+    <SidebarContent
+      nav={nav}
+      badges={badges}
+      pathname={pathname}
+      user={user}
+      onSignOut={logout}
+      onNavigate={() => setMobileNavOpen(false)}
+    />
+  );
 
   return (
     <div className="min-h-screen">
-      <Sidebar
-        nav={nav}
-        badges={badges}
-        pathname={pathname}
-        user={user}
-        onSignOut={logout}
-      />
+      <aside className="dusk-sidebar fixed inset-y-0 left-0 z-40 hidden w-[220px] flex-col md:flex">
+        {sidebar}
+      </aside>
 
-      <div className="flex min-h-screen flex-col md:pl-[220px]">
+      <MobileNavDrawer
+        open={mobileNavOpen}
+        onClose={() => setMobileNavOpen(false)}
+      >
+        {sidebar}
+      </MobileNavDrawer>
+
+      <div className="flex min-h-screen min-w-0 flex-col md:pl-[220px]">
         <Topbar
           title={pageTitleForPath(pathname)}
           greetingText={greeting(user?.name)}
+          onOpenNav={() => setMobileNavOpen(true)}
         />
-        <div key={pathname ?? "page"} className="dusk-page flex-1 px-8 py-7">
+        <div
+          key={pathname ?? "page"}
+          className="dusk-page min-w-0 flex-1 px-4 py-5 sm:px-6 sm:py-6 md:px-8 md:py-7"
+        >
           {children}
         </div>
       </div>
@@ -62,29 +86,85 @@ export function AppShell({
   );
 }
 
-function Sidebar({
+function MobileNavDrawer({
+  open,
+  onClose,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 md:hidden">
+      <div
+        className="absolute inset-0"
+        style={{ background: "rgba(57, 65, 90, 0.35)" }}
+        onClick={onClose}
+        aria-hidden
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu"
+        className="dusk-sidebar absolute inset-y-0 left-0 flex w-[248px] max-w-[82vw] flex-col"
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close menu"
+          className="absolute right-2 top-2 rounded-md p-1 text-dusk-secondary hover:text-dusk-primary"
+        >
+          <X size={18} aria-hidden />
+        </button>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function SidebarContent({
   nav,
   badges,
   pathname,
   user,
   onSignOut,
+  onNavigate,
 }: {
   nav: NavItem[];
   badges: Record<string, NavBadge>;
   pathname: string | null;
   user: AuthUser | null;
   onSignOut: () => void;
+  onNavigate: () => void;
 }) {
   return (
-    <aside className="dusk-sidebar fixed inset-y-0 left-0 z-40 hidden w-[220px] flex-col md:flex">
+    <>
       <div className="px-4 py-4 text-base">
-        <Link href="/">
+        <Link href="/" onClick={onNavigate}>
           <BrandMark />
         </Link>
       </div>
 
       <nav
-        className="flex flex-1 flex-col gap-0.5 px-2 py-2"
+        className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-2"
         aria-label="Primary"
       >
         {nav.map((item) => {
@@ -94,6 +174,7 @@ function Sidebar({
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               className={`dusk-nav-item flex items-center gap-2.5 rounded-r-md px-3 py-2 text-sm ${
                 active ? "is-active" : ""
@@ -108,7 +189,7 @@ function Sidebar({
       </nav>
 
       {user ? <UserFooter user={user} onSignOut={onSignOut} /> : null}
-    </aside>
+    </>
   );
 }
 
@@ -174,22 +255,34 @@ function UserFooter({
 function Topbar({
   title,
   greetingText,
+  onOpenNav,
 }: {
   title: string;
   greetingText: string;
+  onOpenNav: () => void;
 }) {
   return (
     <header
-      className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-4 px-8"
+      className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 px-4 sm:px-6 md:px-8"
       style={{
         background: "var(--nm-bg)",
         boxShadow: "0 8px 18px -12px rgba(57, 65, 90, 0.4)",
       }}
     >
-      <h1 className="truncate text-sm font-semibold text-dusk-primary">
+      <button
+        type="button"
+        onClick={onOpenNav}
+        aria-label="Open menu"
+        className="-ml-1 shrink-0 rounded-md p-1.5 text-dusk-secondary hover:text-dusk-primary md:hidden"
+      >
+        <Menu size={20} aria-hidden />
+      </button>
+      <h1 className="min-w-0 flex-1 truncate text-sm font-semibold text-dusk-primary">
         {title}
       </h1>
-      <p className="shrink-0 text-xs text-dusk-secondary">{greetingText}</p>
+      <p className="hidden shrink-0 text-xs text-dusk-secondary sm:block">
+        {greetingText}
+      </p>
     </header>
   );
 }
