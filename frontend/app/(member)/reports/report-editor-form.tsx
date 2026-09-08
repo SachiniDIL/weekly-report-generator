@@ -2,13 +2,11 @@
 
 import { useState } from "react";
 import { describeError } from "@/lib/api-client";
-import type { ProjectResponse } from "@/lib/api/projects";
 import { useConfirm } from "@/lib/confirm-dialog";
 import {
   toReportContentRequest,
   validateReportContentForm,
   type ReportContentForm,
-  type ReportIdentityDraft,
 } from "./report-content-form";
 import {
   AchievementsFieldset,
@@ -24,7 +22,13 @@ import {
 import { useReportContentForm } from "./use-report-content-form";
 
 type IdentityProps =
-  | { mode: "create"; projects: ProjectResponse[] }
+  | {
+      mode: "create";
+      projectId: number;
+      projectName: string;
+      weekStart: string;
+      weekEnd: string;
+    }
   | {
       mode: "existing";
       projectName: string;
@@ -46,33 +50,24 @@ export function ReportEditorForm({
 }) {
   const content = useReportContentForm(initialContent);
   const confirm = useConfirm();
-  const [draftIdentity, setDraftIdentity] = useState<ReportIdentityDraft>({
-    projectId: null,
-    weekStart: "",
-    weekEnd: "",
-  });
   const [problems, setProblems] = useState<string[]>([]);
 
   const saveDraft = useSaveReportDraftMutation(reportId);
   const submit = useSubmitReportMutation(reportId);
   const pending = saveDraft.isPending || submit.isPending;
   const serverError = saveDraft.error ?? submit.error;
-  const isCreate = identity.mode === "create";
 
   function currentValues(): ReportEditorValues {
     return {
-      projectId: isCreate ? draftIdentity.projectId : null,
-      weekStart: isCreate ? draftIdentity.weekStart : "",
-      weekEnd: isCreate ? draftIdentity.weekEnd : "",
+      projectId: identity.mode === "create" ? identity.projectId : null,
+      weekStart: identity.mode === "create" ? identity.weekStart : "",
+      weekEnd: identity.mode === "create" ? identity.weekEnd : "",
       content: toReportContentRequest(content.form),
     };
   }
 
   function passesValidation(): boolean {
-    const found = validateReportContentForm(
-      content.form,
-      isCreate ? draftIdentity : undefined,
-    );
+    const found = validateReportContentForm(content.form);
     setProblems(found);
     return found.length === 0;
   }
@@ -103,19 +98,11 @@ export function ReportEditorForm({
       className="dusk-panel flex flex-col gap-6 p-4 sm:p-6"
       onSubmit={(event) => event.preventDefault()}
     >
-      {identity.mode === "create" ? (
-        <CreateIdentityFields
-          projects={identity.projects}
-          value={draftIdentity}
-          onChange={setDraftIdentity}
-        />
-      ) : (
-        <ReadOnlyIdentity
-          projectName={identity.projectName}
-          weekStart={identity.weekStart}
-          weekEnd={identity.weekEnd}
-        />
-      )}
+      <ReadOnlyIdentity
+        projectName={identity.projectName}
+        weekStart={identity.weekStart}
+        weekEnd={identity.weekEnd}
+      />
 
       <ActionBar
         onSaveDraft={handleSaveDraft}
@@ -236,56 +223,6 @@ function ActionBar({
   );
 }
 
-function CreateIdentityFields({
-  projects,
-  value,
-  onChange,
-}: {
-  projects: ProjectResponse[];
-  value: ReportIdentityDraft;
-  onChange: (next: ReportIdentityDraft) => void;
-}) {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <div className="flex flex-col gap-1 sm:col-span-2">
-        <label htmlFor="report-project" className={FIELD_LABEL}>
-          Project
-        </label>
-        <select
-          id="report-project"
-          value={value.projectId ?? ""}
-          onChange={(event) =>
-            onChange({
-              ...value,
-              projectId: event.target.value ? Number(event.target.value) : null,
-            })
-          }
-          className="px-3 py-2 text-sm"
-        >
-          <option value="">Select a project</option>
-          {projects.map((project) => (
-            <option key={project.id} value={project.id}>
-              {project.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      <DateField
-        id="report-week-start"
-        label="Week start"
-        value={value.weekStart}
-        onChange={(weekStart) => onChange({ ...value, weekStart })}
-      />
-      <DateField
-        id="report-week-end"
-        label="Week end"
-        value={value.weekEnd}
-        onChange={(weekEnd) => onChange({ ...value, weekEnd })}
-      />
-    </div>
-  );
-}
-
 function ReadOnlyIdentity({
   projectName,
   weekStart,
@@ -333,33 +270,6 @@ function Field({
       </label>
       <input
         id={id}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="px-3 py-2 text-sm"
-      />
-    </div>
-  );
-}
-
-function DateField({
-  id,
-  label,
-  value,
-  onChange,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className={FIELD_LABEL}>
-        {label}
-      </label>
-      <input
-        id={id}
-        type="date"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className="px-3 py-2 text-sm"

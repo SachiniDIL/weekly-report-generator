@@ -183,9 +183,9 @@ class ReportListingIntegrationTest {
         User manager = persistUser("Manager", "manager@example.com", Role.MANAGER);
         User member = persistUser("Member", "member@example.com", Role.MEMBER);
         Project project = persistProject();
-        createReport(member, project.getId(), "2026-09-01", "2026-09-05");
-        createReport(member, project.getId(), "2026-09-08", "2026-09-12");
-        createReport(member, project.getId(), "2026-09-15", "2026-09-19");
+        createReport(member, project.getId(), "2026-08-03", "2026-08-09");
+        createReport(member, project.getId(), "2026-08-10", "2026-08-16");
+        createReport(member, project.getId(), "2026-08-17", "2026-08-23");
 
         mockMvc.perform(get("/reports")
                         .header("Authorization", bearer(manager))

@@ -210,26 +210,7 @@ describe("validateReportContentForm", () => {
     ]);
   });
 
-  it("flags missing identity fields in create mode", () => {
-    const problems = validateReportContentForm(emptyReportContentForm(), {
-      projectId: null,
-      weekStart: "",
-      weekEnd: "",
-    });
-    expect(problems).toEqual([
-      "Choose a project.",
-      "Set the week start date.",
-      "Set the week end date.",
-    ]);
-  });
-
-  it("returns nothing for a valid create form", () => {
-    expect(
-      validateReportContentForm(emptyReportContentForm(), {
-        projectId: 1,
-        weekStart: "2026-09-01",
-        weekEnd: "2026-09-05",
-      }),
-    ).toEqual([]);
+  it("returns nothing for an empty form (project and week are chosen elsewhere)", () => {
+    expect(validateReportContentForm(emptyReportContentForm())).toEqual([]);
   });
 });

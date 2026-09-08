@@ -1,6 +1,7 @@
 import { request } from "@/lib/api-client";
 
-export type ReportStatus = "DRAFT" | "SUBMITTED" | "NEEDS_CORRECTION" | "APPROVED";
+export type ReportStatus =
+  "DRAFT" | "SUBMITTED" | "NEEDS_CORRECTION" | "APPROVED";
 export type ReviewAction = "APPROVED" | "CHANGES_REQUESTED";
 
 // --- content: request shapes (what the member sends on create/edit) ---
@@ -114,6 +115,7 @@ export interface ReportListItemView {
   weekStart: string;
   weekEnd: string;
   ownerName: string;
+  projectId: number;
   projectName: string;
   currentVersionNo: number;
 }
@@ -166,7 +168,9 @@ export interface Page<T> {
   empty: boolean;
 }
 
-export function createReport(payload: CreateReportRequest): Promise<ReportResponse> {
+export function createReport(
+  payload: CreateReportRequest,
+): Promise<ReportResponse> {
   return request("/reports", { method: "POST", body: payload });
 }
 
@@ -182,18 +186,28 @@ export function submitReport(reportId: number): Promise<ReportResponse> {
 }
 
 /** Manager-only: approve or request changes on a submitted report. */
-export function reviewReport(reportId: number, payload: ReviewRequest): Promise<ReportResponse> {
-  return request(`/reports/${reportId}/review`, { method: "POST", body: payload });
+export function reviewReport(
+  reportId: number,
+  payload: ReviewRequest,
+): Promise<ReportResponse> {
+  return request(`/reports/${reportId}/review`, {
+    method: "POST",
+    body: payload,
+  });
 }
 
 export function getReportDetail(reportId: number): Promise<ReportResponse> {
   return request(`/reports/${reportId}`, { method: "GET" });
 }
 
-export function getReportVersionHistory(reportId: number): Promise<ReportVersionHistoryItem[]> {
+export function getReportVersionHistory(
+  reportId: number,
+): Promise<ReportVersionHistoryItem[]> {
   return request(`/reports/${reportId}/versions`, { method: "GET" });
 }
 
-export function listReports(params: ListReportsParams = {}): Promise<Page<ReportListItemView>> {
+export function listReports(
+  params: ListReportsParams = {},
+): Promise<Page<ReportListItemView>> {
   return request("/reports", { method: "GET", query: { ...params } });
 }

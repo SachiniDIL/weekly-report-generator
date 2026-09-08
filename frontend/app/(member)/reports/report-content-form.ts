@@ -208,37 +208,13 @@ export function setExclusiveFlag<Row extends { key: string }>(
   });
 }
 
-export interface ReportIdentityDraft {
-  projectId: number | null;
-  weekStart: string;
-  weekEnd: string;
-}
-
-/** Human-readable problems; an empty array means the form is safe to send. */
-export function validateReportContentForm(
-  form: ReportContentForm,
-  identity?: ReportIdentityDraft,
-): string[] {
+/**
+ * Human-readable problems with the report's content; an empty array means it is safe to send.
+ * The report's project and week are chosen on the page before this form appears, so they are
+ * not validated here.
+ */
+export function validateReportContentForm(form: ReportContentForm): string[] {
   const problems: string[] = [];
-
-  if (identity) {
-    if (identity.projectId == null) {
-      problems.push("Choose a project.");
-    }
-    if (!identity.weekStart) {
-      problems.push("Set the week start date.");
-    }
-    if (!identity.weekEnd) {
-      problems.push("Set the week end date.");
-    }
-    if (
-      identity.weekStart &&
-      identity.weekEnd &&
-      identity.weekEnd < identity.weekStart
-    ) {
-      problems.push("The week end date can't be before the week start date.");
-    }
-  }
 
   form.taskEntries.forEach((row, index) => {
     if (!row.taskName.trim() || !row.priority.trim() || !row.status.trim()) {

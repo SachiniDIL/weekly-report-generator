@@ -11,6 +11,7 @@ public record ReportListItemView(
         LocalDate weekStart,
         LocalDate weekEnd,
         String ownerName,
+        Long projectId,
         String projectName,
         int currentVersionNo) {
 
@@ -21,6 +22,7 @@ public record ReportListItemView(
                 report.getWeekStart(),
                 report.getWeekEnd(),
                 report.getUser().getName(),
+                report.getProject().getId(),
                 report.getProject().getName(),
                 report.getCurrentVersionNo());
     }

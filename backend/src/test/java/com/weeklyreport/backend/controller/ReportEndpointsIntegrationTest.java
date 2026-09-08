@@ -163,6 +163,65 @@ class ReportEndpointsIntegrationTest {
     }
 
     @Test
+    void aReportCannotBeCreatedForAnUpcomingWeek() throws Exception {
+        User owner = persistUser("Member", "member@example.com", Role.MEMBER);
+        Project project = persistProject();
+
+        mockMvc.perform(post("/reports")
+                        .header("Authorization", bearer(owner))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"projectId": %d, "weekStart": "2099-01-05", "weekEnd": "2099-01-11"}
+                                """
+                                .formatted(project.getId())))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.message")
+                        .value("You can't create a report for an upcoming week."));
+    }
+
+    @Test
+    void aMemberCannotCreateASecondReportForTheSameProjectAndWeek() throws Exception {
+        User owner = persistUser("Member", "member@example.com", Role.MEMBER);
+        Project project = persistProject();
+        String sameWeek = """
+                {"projectId": %d, "weekStart": "2026-09-01", "weekEnd": "2026-09-05"}
+                """
+                .formatted(project.getId());
+
+        mockMvc.perform(post("/reports")
+                        .header("Authorization", bearer(owner))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(sameWeek))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/reports")
+                        .header("Authorization", bearer(owner))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(sameWeek))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message")
+                        .value("You already have a report for this project and week."));
+
+        // A different member may still report on the same project and week.
+        User other = persistUser("Other", "other@example.com", Role.MEMBER);
+        mockMvc.perform(post("/reports")
+                        .header("Authorization", bearer(other))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(sameWeek))
+                .andExpect(status().isCreated());
+
+        // The same member may report on the same project for a different week.
+        mockMvc.perform(post("/reports")
+                        .header("Authorization", bearer(owner))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"projectId": %d, "weekStart": "2026-09-08", "weekEnd": "2026-09-12"}
+                                """
+                                .formatted(project.getId())))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
     void aUserCannotEditOrSubmitAnotherUsersReport() throws Exception {
         User owner = persistUser("Owner", "owner@example.com", Role.MEMBER);
         User intruder = persistUser("Intruder", "intruder@example.com", Role.MEMBER);

@@ -27,6 +27,7 @@ function item(overrides: Partial<ReportListItemView>): ReportListItemView {
     weekStart: "2026-09-01",
     weekEnd: "2026-09-05",
     ownerName: "Lin",
+    projectId: 5,
     projectName: "Apollo",
     currentVersionNo: 1,
     ...overrides,

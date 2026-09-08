@@ -13,6 +13,8 @@ import com.weeklyreport.backend.dto.CreateReportRequest;
 import com.weeklyreport.backend.dto.ReportContentRequest;
 import com.weeklyreport.backend.dto.ReportResponse;
 import com.weeklyreport.backend.exception.DuplicateKeyContentItemException;
+import com.weeklyreport.backend.exception.DuplicateReportException;
+import com.weeklyreport.backend.exception.FutureReportWeekException;
 import com.weeklyreport.backend.exception.InvalidReportStateException;
 import com.weeklyreport.backend.exception.ProjectNotFoundException;
 import com.weeklyreport.backend.exception.ReportNotFoundException;
@@ -24,6 +26,8 @@ import com.weeklyreport.backend.repository.ReportRepository;
 import com.weeklyreport.backend.repository.ReportVersionRepository;
 import com.weeklyreport.backend.repository.TaskEntryRepository;
 import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -86,6 +90,15 @@ public class ReportService {
         Project project = projectRepository
                 .findById(request.projectId())
                 .orElseThrow(() -> new ProjectNotFoundException(request.projectId()));
+
+        LocalDate today = LocalDate.ofInstant(clock.instant(), ZoneOffset.UTC);
+        if (request.weekStart().isAfter(today)) {
+            throw new FutureReportWeekException();
+        }
+        if (reportRepository.existsByUserIdAndProjectIdAndWeekStart(
+                owner.getId(), project.getId(), request.weekStart())) {
+            throw new DuplicateReportException();
+        }
 
         Report report = new Report();
         report.setUser(owner);

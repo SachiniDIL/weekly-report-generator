@@ -19,6 +19,9 @@ public interface ReportRepository
 
     List<Report> findByWeekStartAndWeekEnd(LocalDate weekStart, LocalDate weekEnd);
 
+    /** A member files one report per project per reporting week. */
+    boolean existsByUserIdAndProjectIdAndWeekStart(Long userId, Long projectId, LocalDate weekStart);
+
     /** Reports whose week contains {@code today} and that have moved past DRAFT. */
     long countByStatusNotAndWeekStartLessThanEqualAndWeekEndGreaterThanEqual(
             ReportStatus status, LocalDate weekStart, LocalDate weekEnd);

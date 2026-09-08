@@ -36,6 +36,7 @@ function reportRow(overrides: Partial<ReportListItemView>): ReportListItemView {
     weekStart: "2026-08-24",
     weekEnd: "2026-08-30",
     ownerName: "Fatima Noor",
+    projectId: 5,
     projectName: "Apollo",
     currentVersionNo: 1,
     ...overrides,
@@ -57,7 +58,12 @@ function pageOf(content: ReportListItemView[]): Page<ReportListItemView> {
 }
 
 const REPORTS = [
-  reportRow({ id: 41, weekStart: "2026-08-24", weekEnd: "2026-08-30", status: "APPROVED" }),
+  reportRow({
+    id: 41,
+    weekStart: "2026-08-24",
+    weekEnd: "2026-08-30",
+    status: "APPROVED",
+  }),
   reportRow({
     id: 37,
     weekStart: "2026-08-17",
@@ -85,7 +91,9 @@ describe("TeamMemberProfilePage", () => {
   }
 
   function reportsRequestUrl(): URL | undefined {
-    const call = fetchMock.mock.calls.find(([url]) => url.includes("/reports?"));
+    const call = fetchMock.mock.calls.find(([url]) =>
+      url.includes("/reports?"),
+    );
     return call ? new URL(call[0]) : undefined;
   }
 
@@ -100,13 +108,17 @@ describe("TeamMemberProfilePage", () => {
 
     renderWithQueryClient(<TeamMemberProfilePage />);
 
-    expect(await screen.findByRole("heading", { name: "Fatima Noor" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Fatima Noor" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("fatima@example.com")).toBeInTheDocument();
 
     const submitted = screen.getByText("Reports submitted").closest("div")!;
     expect(within(submitted).getByText("9")).toBeInTheDocument();
 
-    const corrections = screen.getByText("Reports needing correction").closest("div")!;
+    const corrections = screen
+      .getByText("Reports needing correction")
+      .closest("div")!;
     expect(within(corrections).getByText("4")).toBeInTheDocument();
 
     const hours = screen.getByText("Hours by task type").closest("div")!;
@@ -121,7 +133,9 @@ describe("TeamMemberProfilePage", () => {
 
     renderWithQueryClient(<TeamMemberProfilePage />);
 
-    expect(await screen.findByText(/2026-08-24.*2026-08-30/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/2026-08-24.*2026-08-30/),
+    ).toBeInTheDocument();
     expect(screen.getByText(/2026-08-17.*2026-08-23/)).toBeInTheDocument();
 
     await waitFor(() => expect(reportsRequestUrl()).toBeDefined());
@@ -138,15 +152,21 @@ describe("TeamMemberProfilePage", () => {
 
     renderWithQueryClient(<TeamMemberProfilePage />);
 
-    expect(await screen.findByText(/hasn't written any reports yet/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/hasn't written any reports yet/i),
+    ).toBeInTheDocument();
   });
 
   it("shows a clear message for an unknown or non-member user id", async () => {
-    respondWith({ profile: jsonResponse(404, { message: "User 5 not found" }) });
+    respondWith({
+      profile: jsonResponse(404, { message: "User 5 not found" }),
+    });
 
     renderWithQueryClient(<TeamMemberProfilePage />);
 
-    expect(await screen.findByText(/team member was not found/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/team member was not found/i),
+    ).toBeInTheDocument();
     expect(screen.queryByText("User 5 not found")).not.toBeInTheDocument();
     expect(screen.queryByText("Report history")).not.toBeInTheDocument();
   });

@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { describeError } from "@/lib/api-client";
 import {
   createReport,
   submitReport,
@@ -52,6 +53,7 @@ export function useSaveReportDraftMutation(reportId: number | null) {
         router.replace(`/reports/${report.id}`);
       }
     },
+    onError: (error) => toast.error(describeError(error)),
   });
 }
 
@@ -72,5 +74,6 @@ export function useSubmitReportMutation(reportId: number | null) {
       toast.success("Report submitted for review.");
       router.replace(`/reports/${report.id}`);
     },
+    onError: (error) => toast.error(describeError(error)),
   });
 }
