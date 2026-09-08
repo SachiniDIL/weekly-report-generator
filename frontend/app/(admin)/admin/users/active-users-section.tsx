@@ -12,6 +12,8 @@ import {
 const ALL_ROLES: Role[] = ["ADMIN", "MANAGER", "MEMBER"];
 
 export function ActiveUsersSection({ users }: { users: AdminUserView[] }) {
+  const adminCount = users.filter((user) => user.role === "ADMIN").length;
+
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-dusk-secondary">
@@ -22,7 +24,11 @@ export function ActiveUsersSection({ users }: { users: AdminUserView[] }) {
       ) : (
         <ul className="flex flex-col divide-y divide-black/10">
           {users.map((user) => (
-            <ActiveUserRow key={user.id} user={user} />
+            <ActiveUserRow
+              key={user.id}
+              user={user}
+              isLastAdmin={user.role === "ADMIN" && adminCount <= 1}
+            />
           ))}
         </ul>
       )}
@@ -30,7 +36,13 @@ export function ActiveUsersSection({ users }: { users: AdminUserView[] }) {
   );
 }
 
-function ActiveUserRow({ user }: { user: AdminUserView }) {
+function ActiveUserRow({
+  user,
+  isLastAdmin,
+}: {
+  user: AdminUserView;
+  isLastAdmin: boolean;
+}) {
   const changeRole = useChangeUserRoleMutation();
   const remove = useRemoveUserMutation();
   const confirm = useConfirm();
@@ -77,9 +89,10 @@ function ActiveUserRow({ user }: { user: AdminUserView }) {
           <select
             aria-label={`Role for ${user.name}`}
             value={currentRole}
-            disabled={busy}
+            // The last admin can't be demoted — the system must keep one.
+            disabled={busy || isLastAdmin}
             onChange={(event) => handleRoleChange(event.target.value as Role)}
-            className="rounded border border-black/15 bg-transparent px-2 py-1 dark:border-white/20"
+            className="rounded border border-black/15 bg-transparent px-2 py-1 dark:border-white/20 disabled:opacity-60"
           >
             {ALL_ROLES.map((option) => (
               <option key={option} value={option}>
@@ -87,7 +100,9 @@ function ActiveUserRow({ user }: { user: AdminUserView }) {
               </option>
             ))}
           </select>
-          {isAdmin ? (
+          {isLastAdmin ? (
+            <span className="text-xs text-dusk-muted">Only admin</span>
+          ) : isAdmin ? (
             <span className="text-xs text-dusk-muted">Protected</span>
           ) : (
             <button

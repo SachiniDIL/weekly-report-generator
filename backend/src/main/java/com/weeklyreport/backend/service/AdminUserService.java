@@ -9,6 +9,7 @@ import com.weeklyreport.backend.dto.ApproveUserRequest;
 import com.weeklyreport.backend.dto.ChangeRoleRequest;
 import com.weeklyreport.backend.exception.AdminNotRemovableException;
 import com.weeklyreport.backend.exception.InvalidUserStateException;
+import com.weeklyreport.backend.exception.LastAdminException;
 import com.weeklyreport.backend.exception.UserNotFoundException;
 import com.weeklyreport.backend.repository.UserRepository;
 import java.util.List;
@@ -80,8 +81,18 @@ public class AdminUserService {
         if (user.getStatus() != UserStatus.ACTIVE) {
             throw new InvalidUserStateException("Only an active account's role can be changed");
         }
+        if (isDemotingLastAdmin(user, request.role())) {
+            throw new LastAdminException();
+        }
         user.setRole(request.role());
         return AdminUserView.from(user);
+    }
+
+    /** The system must always keep at least one active admin. */
+    private boolean isDemotingLastAdmin(User user, Role newRole) {
+        return user.getRole() == Role.ADMIN
+                && newRole != Role.ADMIN
+                && userRepository.countByStatusAndRole(UserStatus.ACTIVE, Role.ADMIN) <= 1;
     }
 
     private User getUser(long id) {

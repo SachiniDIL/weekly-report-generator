@@ -218,6 +218,34 @@ class AdminUserEndpointsIntegrationTest {
     }
 
     @Test
+    void theOnlyAdminsRoleCannotBeChanged() throws Exception {
+        User soleAdmin = persistUser("Sole Admin", "sole-admin@example.com", UserStatus.ACTIVE, Role.ADMIN);
+
+        mockMvc.perform(patch("/admin/users/" + soleAdmin.getId() + "/role")
+                        .header("Authorization", bearer(soleAdmin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(roleBody("MANAGER")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").isNotEmpty());
+
+        assertThat(userRepository.findById(soleAdmin.getId()).orElseThrow().getRole())
+                .isEqualTo(Role.ADMIN);
+    }
+
+    @Test
+    void anAdminsRoleCanBeChangedOnceAnotherAdminExists() throws Exception {
+        User admin = persistUser("Admin", "admin@example.com", UserStatus.ACTIVE, Role.ADMIN);
+        User secondAdmin = persistUser("Second Admin", "second-admin@example.com", UserStatus.ACTIVE, Role.ADMIN);
+
+        mockMvc.perform(patch("/admin/users/" + secondAdmin.getId() + "/role")
+                        .header("Authorization", bearer(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(roleBody("MANAGER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("MANAGER"));
+    }
+
+    @Test
     void anAdminAccountCannotBeRemoved() throws Exception {
         User admin = persistUser("Admin", "admin@example.com", UserStatus.ACTIVE, Role.ADMIN);
         User otherAdmin = persistUser("Other Admin", "other-admin@example.com", UserStatus.ACTIVE, Role.ADMIN);

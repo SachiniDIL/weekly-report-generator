@@ -12,7 +12,7 @@ function json(status: number, body: unknown): Response {
   } as unknown as Response;
 }
 
-function fakeBackend() {
+function fakeBackend(extraUsers: AdminUserView[] = []) {
   let nextId = 100;
   const users: AdminUserView[] = [
     {
@@ -31,6 +31,7 @@ function fakeBackend() {
       status: "ACTIVE",
       createdAt: "2026-09-02T00:00:00Z",
     },
+    ...extraUsers,
   ];
 
   return jest.fn(async (rawUrl: string, init: RequestInit) => {
@@ -92,9 +93,20 @@ function fakeBackend() {
   });
 }
 
-function useBackend() {
-  global.fetch = fakeBackend() as unknown as typeof fetch;
+function useBackend(extraUsers: AdminUserView[] = []) {
+  global.fetch = fakeBackend(extraUsers) as unknown as typeof fetch;
   setAuthToken(null);
+}
+
+function admin(id: number, name: string): AdminUserView {
+  return {
+    id,
+    name,
+    email: `${name.toLowerCase().replace(/\s+/g, ".")}@example.com`,
+    role: "ADMIN",
+    status: "ACTIVE",
+    createdAt: "2026-09-03T00:00:00Z",
+  };
 }
 
 function rowFor(name: string): HTMLElement {
@@ -224,5 +236,37 @@ describe("AdminUsersPage", () => {
     expect(
       within(rowFor("Nora New")).getByLabelText("Role for Nora New"),
     ).toHaveValue("MANAGER");
+  });
+
+  it("locks the role of the only admin and marks the row", async () => {
+    useBackend([admin(3, "Sole Admin")]);
+    renderWithQueryClient(<AdminUsersPage />);
+    await screen.findByText("Sole Admin");
+
+    const row = rowFor("Sole Admin");
+    expect(within(row).getByLabelText("Role for Sole Admin")).toBeDisabled();
+    expect(within(row).getByText("Only admin")).toBeInTheDocument();
+    expect(
+      within(row).queryByRole("button", { name: "Remove" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("allows changing an admin's role once a second admin exists", async () => {
+    useBackend([admin(3, "First Admin"), admin(4, "Second Admin")]);
+    renderWithQueryClient(<AdminUsersPage />);
+    await screen.findByText("First Admin");
+
+    const select = within(rowFor("First Admin")).getByLabelText(
+      "Role for First Admin",
+    );
+    expect(select).toBeEnabled();
+    fireEvent.change(select, { target: { value: "MANAGER" } });
+    await confirmInDialog("Change role");
+
+    await waitFor(() =>
+      expect(
+        within(rowFor("First Admin")).getByLabelText("Role for First Admin"),
+      ).toHaveValue("MANAGER"),
+    );
   });
 });
