@@ -76,7 +76,17 @@ top-level servlet filters that would run ahead of CORS.
   `/admin/users`).
 - **AppShell** — one shared frame: a role-specific sidebar (nav items from
   `nav-config`), a topbar with a route-derived page title and a time-of-day
-  greeting, and a user footer (avatar, role badge, sign out).
+  greeting, and a user footer (avatar, role badge, sign out). Below `md` the
+  sidebar collapses into a slide-in drawer opened from a hamburger in the topbar;
+  the same `SidebarContent` renders in both. Nav items carry attention markers
+  (`use-nav-badges`) — a dot on the member's "Reports" when a report needs
+  corrections, a count on the manager's "Review Queue".
+- **UI feedback** — a toast system (`lib/toast`, `useToast`) confirms mutations
+  whose result the user would otherwise miss; a promise-based confirm dialog
+  (`lib/confirm-dialog`, `useConfirm`) gates hard-to-undo actions (submit a
+  report, create/approve/remove a user, change a role). Both providers are
+  mounted once in `lib/providers.tsx`. AI text is rendered through a small
+  in-house Markdown component (`lib/ai/ai-markdown`).
 - **Server state** — every backend call goes through `lib/api-client.ts`
   (`request()`): injects the bearer token, serialises query params the way Spring
   `Pageable` expects (repeated `sort` keys), and throws a typed `ApiError`
@@ -187,10 +197,13 @@ Supporting surfaces:
 
 - **Report editor** (`report-editor-form.tsx`, `use-report-content-form.ts`) —
   used for both create (`/reports/new`) and edit (`/reports/[id]`). An identity
-  block (project picker fed by `GET /me/projects`, week start/end) plus repeated
-  fieldsets for tasks / blockers / achievements / hours, with client-side
-  validation. When the report is `NEEDS_CORRECTION`, the manager's
-  `CorrectionNotice` is rendered above the form.
+  block (project picker fed by `GET /me/projects`, week start/end) plus fieldsets
+  for tasks / blockers / achievements / hours, with client-side validation. Task
+  priority and status are dropdowns with fixed options; the hours breakdown is a
+  fixed row per task type (Development / Testing / Meetings / Documentation) —
+  the member only enters hours. "Save draft" sits at the top and bottom;
+  "Submit for review" goes through the confirm dialog. When the report is
+  `NEEDS_CORRECTION`, the manager's `CorrectionNotice` is rendered above the form.
 - **Read-only view** (`ReportContentView`) — shown instead of the editor once a
   report is `SUBMITTED` or `APPROVED`.
 
@@ -211,7 +224,8 @@ Manager-only, two tabs:
     compliance rate, needs-correction count, open blockers.
   - Four Recharts charts from `GET /dashboard/charts/*`: tasks-completed trend,
     submission status by member, workload by project, time by task type.
-  - A "Generate team summary" button + dismissable AI panel (`team-summary-panel`).
+  - A "Generate AI summary" button + dismissable panel (`team-summary-panel`),
+    the response rendered as Markdown (headings, bullet lists, bold).
 - **Section comparison** (`section-comparison.tsx`) — pick _Blockers_ or
   _Achievements_ and a week; `GET /dashboard/section` returns, side by side,
   every active member's items for that week's **current version only**, with the
@@ -282,6 +296,11 @@ services.
 - **Token revocation** — `tokenVersion` is bumped on password reset and on user
   removal, instantly invalidating every outstanding token for that user without a
   server-side blacklist.
+- **Admin protection** — `AdminUserService` refuses to remove any `ADMIN`
+  account (`403`), and refuses to change a role away from `ADMIN` when it is the
+  only active admin (`409`), so the system always keeps at least one. The
+  frontend mirrors this (no Remove button on admin rows; the sole admin's role
+  select is disabled).
 - **Rate limiting** — Bucket4j per-IP on the three unauthenticated `/auth`
   endpoints (everything else already needs a valid JWT, which bounds abuse).
 
@@ -382,8 +401,12 @@ fixed-format weekly summary.
   (`ai-chat-widget` / `ai-chat-thread` / `ai-chat-composer`) — messages in React
   state only, input disabled while a request is in flight, the backend's error
   message shown inline.
-- A "Generate team summary" button + dismissable panel on the dashboard Overview
+- A "Generate AI summary" button + dismissable panel on the dashboard Overview
   tab.
+- Both render the model's reply through `lib/ai/ai-markdown` — a dependency-free
+  renderer for the small Markdown subset the model uses (headings, bullet and
+  numbered lists, inline bold/italic/code), so the summary reads as a formatted
+  document rather than raw `### ... * ...` text.
 
 Tests mock `GeminiService` with `@MockitoBean`: a `MEMBER` gets 403, and a
 `MANAGER` call is verified to reach Gemini with a non-empty prompt containing the
@@ -436,8 +459,9 @@ seeded report data.
 
 **Reporting & dashboard**
 
-- Validate `priority` / task `status` against enums instead of free-form
-  `VARCHAR(50)` strings.
+- Enforce the task `priority` / `status` value sets on the backend too — the
+  editor now constrains them to dropdowns, but the column is still free-form
+  `VARCHAR(50)` and the API accepts any string.
 - Date-range selection rather than a single week; CSV/PDF export.
 - In-app / email notifications when a report is submitted (manager) or sent back
   (member) — right now the only transactional email is password reset.
